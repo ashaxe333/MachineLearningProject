@@ -2,7 +2,6 @@ import time
 import requests
 import json
 
-# Nastavení parametrů
 api_key = "F0109579D9FA4CAD80FBACF23DD58A66"
 
 search_terms = ["DDR4 RAM 16GB", "DDR4 RAM 32GB"]
