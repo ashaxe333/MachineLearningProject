@@ -57,7 +57,8 @@ def extract_ram_details(title):
 #print(df["prices"][31][0]["value"])
 df[['Capacity_GB', 'Generation', 'Speed_MHz']] = df['title'].apply(extract_ram_details)
 df['Final_Price'] = df['price'].apply(lambda x: x.get('value') if isinstance(x, dict) else None)
+df = df.drop_duplicates(subset=['asin'])
 df_clean = df.dropna(subset=['Capacity_GB', 'Generation', 'Speed_MHz', 'Final_Price'])
 
-print(df_clean.head())
+#print(df_clean.head())
 print(df_clean)
