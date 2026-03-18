@@ -1,64 +1,76 @@
+import random
+import time
+import requests
 import json
-import re
-import pandas as pd
 
-""" 
-        Převod špatně uložených dat - ZMIZÍ
+#Doplnit klíč
+api_key = ""
+
+search_terms = [
+    "DDR4 RAM 16GB kit 3200MHz",
+    "DDR5 RAM 32GB kit 6000MHz",
+    "DDR4 RAM 8GB desktop",
+    "DDR3 RAM 16GB kit",
+    "SO-DIMM DDR4 16GB laptop",
+    "SO-DIMM DDR5 32GB laptop",
+    "SO-DIMM DDR3L 8GB",
+    "Corsair Vengeance LPX",
+    "G.SKILL Ripjaws V",
+    "Kingston FURY Beast",
+    "Crucial RAM DDR4",
+    "Samsung RAM 8GB DDR4",
+    "ECC RDIMM 32GB server",
+    "Timetec Hynix IC RAM",
+    "Patriot Viper Steel DDR4"
+]
+
+pages = [7, 8, 9, 10, 11, 12]
+
+all_results = []
+
+def search_term_for_key(key, terms, results, pages):
+    if not key:
+        print("Skipping: Key not provided.")
+        return
+
+    for search_term in terms:
+        for page in pages:
+            params = {
+                'api_key': key,
+                'type': 'search',
+                'amazon_domain': 'amazon.com',
+                'search_term': search_term,
+                'page': str(page)
+            }
+
+            # kdyby to poslalo blbou stránku (prázdnou/žádnou,...)
+            try:
+                response = requests.get('https://api.rainforestapi.com/request', params)
+                data = response.json()
+
+                if "search_results" in data:
+                    results.extend(data["search_results"])
+                    print(f"Obtained {len(data['search_results'])} products")
+                else:
+                    print("No search results found")
+
+            except Exception as e:
+                print(f"Error occured: {e}")
+
+            time.sleep(random.uniform(1, 4))
+
+        final_data = {"data": all_results}
+
+        with open('ram_data_TEST2.json', 'w', encoding='utf-8') as f:
+            json.dump(final_data, f, indent=4, ensure_ascii=False)
+
+search_term_for_key(api_key, search_terms, all_results, pages)
+
 """
-"""
-data = {}
+final_data = { "data": all_results }
 
-with open("ram_data_page1.json", "r", encoding='utf-8') as file:
-    data = json.load(file)
-
-#print(data)
-print(type(data["data"][0][0]))
-data0 = data["data"][0]
-data1 = data["data"][1]
-data2 = data["data"][2]
-data3 = data["data"][3]
-
-data2 = []
-for datas in [data0, data1, data2, data3]:
-    data2.extend(datas)
-
-final_data = {
-    "data": data2
-}
-
-print(final_data)
-
-with open('ram_data_page2.json', 'w', encoding='utf-8') as f:
+with open('ram_data_TEST.json', 'w', encoding='utf-8') as f:
     json.dump(final_data, f, indent=4, ensure_ascii=False)
 """
-"""
-        KONEC
-"""
 
-with open("ram_data_page2.json", "r", encoding='utf-8') as file:
-    raw_data = json.load(file)
-
-print(len(raw_data["data"]))
-
-df = pd.DataFrame(raw_data["data"])
-
-def extract_ram_details(title):
-
-    size = re.search(r'(\d+)\s*GB', title, re.IGNORECASE)
-    gen = re.search(r'DDR(\d)', title, re.IGNORECASE)
-    freq = re.search(r'(\d+)\s*MHz', title, re.IGNORECASE)
-
-    return pd.Series([
-        int(size.group(1)) if size else None,
-        int(gen.group(1)) if gen else None,
-        int(freq.group(1)) if freq else None
-    ])
-
-#print(df["prices"][31][0]["value"])
-df[['Capacity_GB', 'Generation', 'Speed_MHz']] = df['title'].apply(extract_ram_details)
-df['Final_Price'] = df['price'].apply(lambda x: x.get('value') if isinstance(x, dict) else None)
-df = df.drop_duplicates(subset=['asin'])
-df_clean = df.dropna(subset=['Capacity_GB', 'Generation', 'Speed_MHz', 'Final_Price'])
-
-#print(df_clean.head())
-print(df_clean)
+print(f"Data were downloaded! ({len(all_results)} products)")
