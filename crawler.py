@@ -3,7 +3,11 @@ import time
 import requests
 import json
 
-api_keys = ["B715C132CE194F3BB98243251065D448", ""]
+#Doplnit klíč
+api_key = ""
+
+#2E8CFE0825164AB081917AF668D10A1D
+#3C3D7706BD4F4B4CABD11071A893011C
 
 search_terms = [
     "DDR4 RAM 16GB kit 3200MHz",
@@ -23,10 +27,7 @@ search_terms = [
     "Patriot Viper Steel DDR4"
 ]
 
-pages = [
-    [1, 2, 3, 4, 5, 6],
-    [7, 8, 9, 10, 11, 12]
-]
+pages = [13, 14, 15, 16, 17, 18]
 
 all_results = []
 
@@ -59,16 +60,14 @@ def search_term_for_key(key, terms, results, pages):
             except Exception as e:
                 print(f"Error occured: {e}")
 
-            time.sleep(random.uniform(1, 5))
+            time.sleep(random.uniform(1, 4))
 
-index = 0
-while index < 3:
-    search_term_for_key(api_keys[index], search_terms, all_results, pages[index])
-    index += 1
+        final_data = {"data": all_results}
 
-final_data = { "data": all_results }
+        #průběžně ukládám pro ochranu
+        with open('ram_data_TEST3.json', 'w', encoding='utf-8') as f:
+            json.dump(final_data, f, indent=4, ensure_ascii=False)
 
-with open('ram_data.json', 'w', encoding='utf-8') as f:
-    json.dump(final_data, f, indent=4, ensure_ascii=False)
+search_term_for_key(api_key, search_terms, all_results, pages)
 
 print(f"Data were downloaded! ({len(all_results)} products)")
