@@ -2,11 +2,16 @@ import json
 import re
 import pandas as pd
 
+
 gen_freq_dict = {
     "PC3-8500": 1066.0,
     "PC3-10600": 1333.0,
     "PC3-12800": 1600.0,
     "PC3-14900": 1866.0,
+    "PC3L-8500": 1066.0,
+    "PC3L-10600": 1333.0,
+    "PC3L-12800": 1600.0,
+    "PC3L-14900": 1866.0,
     "PC4-17000": 2133.0,
     "PC4-19200": 2400.0,
     "PC4-21300": 2666.0,
@@ -36,18 +41,18 @@ def extract_ram_details(title):
     if freq_match:
         freq_value = float(freq_match.group(1))
         freq_unit = str(freq_match.group(2))
-        freq = freq_value * 1000 if freq_unit == 'GHz' else freq_value
+        freq = freq_value * 1000 if (freq_unit == 'GHz' or freq_unit == 'Ghz') else freq_value
 
     if freq_match is None:
-        freq_match = re.search(r'(DDR(\d)L*)\s*-*(\d+(?:\.\d+)?)', title, re.IGNORECASE)
+        freq_match = re.search(r'(DDR(\d)L*)[- ]*(\d{4,5})', title, re.IGNORECASE)
         if freq_match:
             freq = float(freq_match.group(3))
 
     if freq_match is None:
-        freq_match = re.search(r'(PC\d)\s*-*(\d+(?:\.\d+)?)', title, re.IGNORECASE)
+        freq_match = re.search(r'(PC(\d)*L*)[- ]*(\d{4,5})', title, re.IGNORECASE)
         if freq_match:
             freq_type = str(freq_match.group(1)).upper()
-            freq_value = str(freq_match.group(2))
+            freq_value = str(freq_match.group(3))
             if len(freq_value) == 4 and int(freq_value[0]) < 6:
                 freq = freq_value
             else:
@@ -67,39 +72,31 @@ def extract_ram_details(title):
         print(f"gen none in: {title}")
     if freq is None:
         print(f"freq none in: {title}")
+    """
+
     if freq:
         #print(f"freq: {freq}")
-        if freq < 1066:
-            print(f"freq is {freq} in: {title}")"""
+        if float(freq) < 1066:
+            print(f"freq is {freq} in: {title}")
 
 
     return pd.Series([
         float(size.group(1)) if size else None,
         int(gen.group(1)) if gen else None,
-        freq,
+        float(freq) if freq else None,
         str(brand.group(1)) if brand else None,
-        str(latency.group(1)) if latency else None
+        float(latency.group(2)) if latency else None
     ])
 
 #print(raw_df.head())
 raw_df[['Capacity_GB', 'Generation', 'Speed_MHz', 'Brand', 'Latency']] = raw_df['title'].apply(extract_ram_details)
 raw_df['Final_Price'] = raw_df['price'].apply(lambda x: x.get('value') if isinstance(x, dict) else None)
-raw_df = raw_df.drop_duplicates(subset=['asin'])
-raw_df['Brand'] = raw_df['Brand'].fillna('Unknown')
 print(raw_df)
+raw_df = raw_df.drop_duplicates(subset=['asin'])
+raw_df = raw_df.dropna(subset=['asin'])
+raw_df['Brand'] = raw_df['Brand'].fillna('Unknown') #Když dám None místo 'Unknown', bude to 1476 záznamů (pod 1500...)
+print(raw_df)
+raw_df = raw_df[(raw_df['Speed_MHz'] >= 1000)]
+raw_df = raw_df[['Capacity_GB', 'Generation', 'Speed_MHz', 'Brand', 'Latency', 'Final_Price']]
 df_clean = raw_df.dropna(subset=['Capacity_GB', 'Generation', 'Speed_MHz', 'Brand', 'Latency', 'Final_Price'])
 print(df_clean)
-#print(df_clean.head())
-
-
-
-"""
-new_df = pd.DataFrame(['Capacity_GB', 'Generation', 'Speed_MHz', 'Brand'])
-new_df[['Capacity_GB', 'Generation', 'Speed_MHz', 'Brand']] = raw_df['title'].apply(extract_ram_details)
-new_df['Final_Price'] = raw_df['price'].apply(lambda x: x.get('value') if isinstance(x, dict) else None)
-new_df = raw_df.drop_duplicates(subset=['asin'])
-new_df['Brand'] = raw_df['Brand'].fillna('Unknown')
-print(new_df)
-df_clean = new_df.dropna(subset=['Capacity_GB', 'Generation', 'Speed_MHz', 'Final_Price'])
-print(df_clean)
-"""

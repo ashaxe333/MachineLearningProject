@@ -6,12 +6,14 @@ with open("ram_data_TEST.json", "r", encoding='utf-8') as f:
 with open("ram_data_TEST2.json", "r", encoding='utf-8') as f:
     ram_data_TEST2 = json.load(f)
 
-print(len(ram_data_TEST["data"]))
+with open("ram_data_TEST3.json", "r", encoding='utf-8') as f:
+    ram_data_TEST3 = json.load(f)
 
 all_rows = []
 
 all_rows.extend(ram_data_TEST["data"])
 all_rows.extend(ram_data_TEST2["data"])
+all_rows.extend(ram_data_TEST3["data"])
 
 final_data = {"data": all_rows}
 
