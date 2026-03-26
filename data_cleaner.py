@@ -1,7 +1,6 @@
 import json
 import re
 import pandas as pd
-from sklearn.preprocessing import StandardScaler
 
 gen_freq_dict = {
     "PC3-8500": 1066.0,
@@ -28,24 +27,43 @@ with open("ram_data.json", "r", encoding='utf-8') as file:
 print(len(raw_data["data"]))
 
 def extract_ram_details(title):
+    """
+    Method to extract ram details from product title
+    :param title: title of product
+    :return: pd.Series with ram details
+    """
 
-    size = re.search(r'(\d{1,3})\s*(GB)', title, re.IGNORECASE)  #(\d+(?:\.\d+)?)\s*(GB)
+    is_kit_match = re.search(r'\b(Kit|((\d{1,2})\s*[xX]\s*(\d{1,3})\s*(GB)))\b', title, re.IGNORECASE)
+    is_kit = 0
+    size = None
 
-    gen = re.search(r'DDR(\d)L*', title, re.IGNORECASE)
+    if is_kit_match:
+        is_kit = 1
+        if is_kit_match.group(3) and is_kit_match.group(4):
+            size = int(is_kit_match.group(3)) * int(is_kit_match.group(4))
+            if int(is_kit_match.group(3)) == 1:
+                is_kit = 0
 
-    freq_match = re.search(r'(\d{4,5})\s*(MHz|MH|MT/s)', title, re.IGNORECASE) #(\d+(?:\.\d+)?)\s*(MHz|MH|GHz|MT/s)
+    if size is None:
+        size_match = re.search(r'\b(\d{1,3})\s*(GB)\b', title, re.IGNORECASE)
+        if size_match:
+            size = int(size_match.group(1))
+
+    gen = re.search(r'\b(DDR(\d)L*)\b', title, re.IGNORECASE)
+
+    freq_match = re.search(r'\b(\d{4,5})\s*(MHz|MH|MT/s)\b', title, re.IGNORECASE) #(\d+(?:\.\d+)?)\s*(MHz|MH|GHz|MT/s)
     freq = None
 
     if freq_match:
         freq = freq_match.group(1)
 
     if freq_match is None:
-        freq_match = re.search(r'(DDR(\d)L*)[- ]*(\d{4,5})', title, re.IGNORECASE)
+        freq_match = re.search(r'\b(DDR(\d)L*)[- ]*(\d{4,5})\b', title, re.IGNORECASE)
         if freq_match:
             freq = float(freq_match.group(3))
 
     if freq_match is None:
-        freq_match = re.search(r'(PC(\d)*L*)[- ]*(\d{4,5})', title, re.IGNORECASE)
+        freq_match = re.search(r'\b(PC(\d)*L*)[- ]*(\d{4,5})\b', title, re.IGNORECASE)
         if freq_match:
             freq_type = str(freq_match.group(1)).upper()
             freq_value = str(freq_match.group(3))
@@ -55,15 +73,15 @@ def extract_ram_details(title):
                 freq_key = f"{freq_type}-{freq_value}"
                 freq = gen_freq_dict.get(freq_key)
 
-    brand = re.search(r'(Corsair|G.SKILL|Crucial|TEAMGROUP|Kingston|XPG|Samsung|PNY|Timetec|ADATA|SK Hynix|A-Tech|OWC|Micron|Ballistix|HP|Dell|Patriot Memory|Patriot|Lenovo|QNAP|Adamanta)', title, re.IGNORECASE)
+    brand = re.search(r'\b(Corsair|G.SKILL|Crucial|TEAMGROUP|Kingston|XPG|Samsung|PNY|Timetec|ADATA|SK Hynix|A-Tech|OWC|Micron|Ballistix|HP|Dell|Patriot Memory|Patriot|Lenovo|QNAP|Adamanta)\b', title, re.IGNORECASE)
 
-    is_kit = re.search(r'(Kit|((2|3|4|5|6|7|8|9|10|11|12)\s*[xX]\s*(\d{1,3})\s*(GB)))', title, re.IGNORECASE)
+    is_gaming = re.search(r'\b(Gaming|RGB|LED|ARGB|Heatsink|Heat\s*Spreader|Overclock|OC|CL14|CL16|Fury|Vengeance|Trident|Ripjaws|Dominator|Beast|Renegade|Viper|Ballistix|T-Force|XPG)\b', title, re.IGNORECASE)
 
     """
-    if is_kit is None:
-        print(f"is_kit none in: {title}")
+    if is_kit_match is None:
+        print(f"is_kit_match none in: {title}")
         
-    if is_kit:
+    if is_kit_match:
         print(f"kit found in: {title}")
         
     if size is None:
@@ -86,28 +104,33 @@ def extract_ram_details(title):
     """
 
     return pd.Series([
-        float(size.group(1)) if size else None,
-        int(gen.group(1)) if gen else None,
+        int(size) if size else None,
+        int(gen.group(2)) if gen else None,
         float(freq) if freq else None,
         str(brand.group(1)) if brand else None,
-        True if is_kit else False
+        int(is_kit),
+        1 if is_gaming else 0
     ])
 
 def clean_data():
+    """
+    Cleans extracted data
+    :return: cleaned dataset
+    """
     #print(raw_df.head())
     raw_df = pd.DataFrame(raw_data["data"])
-    raw_df[['Capacity_GB', 'Generation', 'Speed_MHz', 'Brand', 'Is_kit']] = raw_df['title'].apply(extract_ram_details)
+    raw_df[['Capacity_GB', 'Generation', 'Speed_MHz', 'Brand', 'Is_kit', 'Is_gaming']] = raw_df['title'].apply(extract_ram_details)
     raw_df['Final_Price'] = raw_df['price'].apply(lambda x: x.get('value') if isinstance(x, dict) else None)
     print(raw_df)
 
     raw_df = raw_df.drop_duplicates(subset=['asin'])
     raw_df = raw_df.dropna(subset=['asin'])
-    raw_df['Brand'] = raw_df['Brand'].fillna("Unknown") #S None 1524
+    raw_df['Brand'] = raw_df['Brand'].fillna(None) #S None 1514 "Unknown"
     print(raw_df)
 
     raw_df = raw_df[(raw_df['Speed_MHz'] >= 1000) & (raw_df['Speed_MHz'] < 10000)]
-    raw_df = raw_df[['Capacity_GB', 'Generation', 'Speed_MHz', 'Brand', 'Is_kit', 'Final_Price']]
-    clean_df = raw_df.dropna(subset=['Capacity_GB', 'Generation', 'Speed_MHz', 'Brand', 'Is_kit', 'Final_Price'])
+    raw_df = raw_df[['title', 'Capacity_GB', 'Generation', 'Speed_MHz', 'Brand', 'Is_kit', 'Is_gaming', 'Final_Price']]
+    clean_df = raw_df.dropna(subset=['title', 'Capacity_GB', 'Generation', 'Speed_MHz', 'Brand', 'Is_kit', 'Is_gaming', 'Final_Price'])
     print(clean_df)
 
     return clean_df
@@ -115,14 +138,24 @@ def clean_data():
 dataset = clean_data()
 print(dataset)
 
-with open("ram_data_cleaned.csv", "w", encoding='utf-8') as file:
-    dataset.to_csv(file, index=False)
+with open("ram_data_cleaned.csv", "w", encoding='utf-8', newline='') as file:
+    dataset.to_csv(file, index=False, encoding='utf-8')
 
 """
 check = []
 check_unique = []
-check.extend(dataset.Is_kit)
-check_unique.extend(dataset.Is_kit.unique())
+check.extend(dataset.Capacity_GB)
+check_unique.extend(dataset.Capacity_GB.unique())
 print(check_unique)
 print(check)
 """
+
+#print(f"{dataset['title'][4080]} - {dataset['Final_Price'][4080]}")
+
+import matplotlib.pyplot as plt
+
+plt.scatter(dataset['Capacity_GB'], dataset['Final_Price'])
+plt.xlabel('Kapacita (GB)')
+plt.ylabel('Cena ($)')
+plt.title('Vztah kapacity a ceny')
+plt.show()

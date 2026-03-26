@@ -3,7 +3,6 @@ import time
 import requests
 import json
 
-#Doplnit klíč
 api_key = ""
 
 #2E8CFE0825164AB081917AF668D10A1D
@@ -32,6 +31,14 @@ pages = [13, 14, 15, 16, 17, 18]
 all_results = []
 
 def search_term_for_key(key, terms, results, pages):
+    """
+    Scrapping method
+    :param key: api_key recieved after creating account on rainforest api
+    :param terms: terms which scrapper is searching for
+    :param results: array for saving scraped products
+    :param pages: pages through which is scraping
+    :return: nothing - only of key is not provided
+    """
     if not key:
         print("Skipping: Key not provided.")
         return
