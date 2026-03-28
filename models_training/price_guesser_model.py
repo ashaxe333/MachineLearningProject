@@ -23,7 +23,16 @@ model_names = [
     '../models/price_regressor_all.pkl'
 ]
 
-def train_model(path_to_file, path_to_model):
+column_paths = [
+    '../columns/price_regressor_columns.pkl',
+    '../columns/price_regressor_cl_None_columns.pkl',
+    '../columns/price_regressor_cl_default_columns.pkl',
+    '../columns/price_regressor_brand_unknown_columns.pkl',
+    '../columns/price_regressor_wo_voltage_columns.pkl',
+    '../columns/price_regressor_all_columns.pkl',
+]
+
+def train_model(path_to_file, path_to_model, path_to_columns):
     data = pd.read_csv(path_to_file, sep=",")
 
     data = pd.get_dummies(data, columns=['Brand'], drop_first=True)
@@ -47,10 +56,10 @@ def train_model(path_to_file, path_to_model):
     print(f"mse: {mean_squared_error(y_test, y_pred)}")
     print(f"R2 Score: {r2_score(y_test, y_pred)}")
 
-    print(y_test.max())
     joblib.dump(model, path_to_model)
+    joblib.dump(X_train.columns.tolist(), path_to_columns)
 
 index = 0
 while index < len(model_names):
-    train_model(data_paths[index], model_names[index])
+    train_model(data_paths[index], model_names[index], column_paths[index])
     index += 1

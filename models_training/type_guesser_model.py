@@ -23,13 +23,21 @@ model_names = [
     '../models/gaming_classifier_all.pkl'
 ]
 
-def train_model(path_to_file, path_to_model):
+column_paths = [
+    '../columns/gaming_classifier_columns.pkl',
+    '../columns/gaming_classifier_cl_None_columns.pkl',
+    '../columns/gaming_classifier_cl_default_columns.pkl',
+    '../columns/gaming_classifier_brand_unknown_columns.pkl',
+    '../columns/gaming_classifier_wo_voltage_columns.pkl',
+    '../columns/gaming_classifier_all_columns.pkl',
+]
+
+def train_model(path_to_file, path_to_model, path_to_columns):
     """
     Trains classifier model and saves it in a pickle file.
     :param path_to_file: path to file to be trained
     :param path_to_model: path to model to be saved
     """
-
     data = pd.read_csv(path_to_file, sep=",")
 
     data = pd.get_dummies(data, columns=['Brand'], drop_first=True)
@@ -37,7 +45,7 @@ def train_model(path_to_file, path_to_model):
     input_features = data.drop(['title', 'Final_Price', 'Is_gaming'], axis=1)
     target_feature = data['Is_gaming']
 
-    X_train, X_test, y_train, y_test = train_test_split(input_features, target_feature, test_size=0.3)
+    X_train, X_test, y_train, y_test = train_test_split(input_features, target_feature, test_size=0.3, random_state=42)
 
     scaler = StandardScaler()
     to_scale = ['Capacity_GB', 'Speed_MHz']
@@ -49,17 +57,23 @@ def train_model(path_to_file, path_to_model):
 
     y_pred = model.predict(X_test)
 
-    print(f"Accuracy (Přesnost): {accuracy_score(y_test, y_pred):.2f}")
+    print(f"Accuracy: {accuracy_score(y_test, y_pred):.2f}")
     print("\nConfusion Matrix:")
     print(confusion_matrix(y_test, y_pred))
     print("\nDetailed Report:")
     print(classification_report(y_test, y_pred))
 
     joblib.dump(model, path_to_model)
+    joblib.dump(X_train.columns.tolist(), path_to_columns)
+
+    once = True
+    while once:
+        joblib.dump(scaler, '../columns/scaler.pkl')
+        once = False
 
 #training("../data/ram_data_cleaned_all.csv", '../models/gaming_classifier_all.pkl')
 
 index = 0
 while index < len(model_names):
-    train_model(data_paths[index], model_names[index])
+    train_model(data_paths[index], model_names[index], column_paths[index])
     index += 1
