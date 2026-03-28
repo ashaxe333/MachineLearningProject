@@ -5,28 +5,52 @@ from sklearn.ensemble import RandomForestRegressor
 from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 import joblib
 
-data = pd.read_csv("../data/ram_data_cleaned.csv", sep=",")
+data_paths = [
+    "../data/ram_data_cleaned.csv",
+    "../data/ram_data_cleaned_cl_None.csv",
+    "../data/ram_data_cleaned_cl_default.csv",
+    "../data/ram_data_cleaned_brand_unknown.csv",
+    "../data/ram_data_cleaned_wo_voltage.csv",
+    "../data/ram_data_cleaned_all.csv"
+]
 
-data = pd.get_dummies(data, columns=['Brand'], drop_first=True)
+model_names = [
+    '../models/price_regressor.pkl',
+    '../models/price_regressor_cl_None.pkl',
+    '../models/price_regressor_cl_default.pkl',
+    '../models/price_regressor_brand_unknown.pkl',
+    '../models/price_regressor_wo_voltage.pkl',
+    '../models/price_regressor_all.pkl'
+]
 
-input_features = data.drop(['title', 'Final_Price'], axis=1)
-target_feature = data['Final_Price']
+def train_model(path_to_file, path_to_model):
+    data = pd.read_csv(path_to_file, sep=",")
 
-X_train, X_test, y_train, y_test = train_test_split(input_features, target_feature, test_size=0.2, random_state=42)
+    data = pd.get_dummies(data, columns=['Brand'], drop_first=True)
 
-scaler = StandardScaler()
-to_scale = ['Capacity_GB', 'Speed_MHz']
-X_train[to_scale] = scaler.fit_transform(X_train[to_scale])
-X_test[to_scale] = scaler.transform(X_test[to_scale])
+    input_features = data.drop(['title', 'Final_Price'], axis=1)
+    target_feature = data['Final_Price']
 
-model = RandomForestRegressor(max_depth=100, n_estimators=200, min_samples_split=5, criterion='squared_error', random_state=42)
-model.fit(X_train, y_train)
+    X_train, X_test, y_train, y_test = train_test_split(input_features, target_feature, test_size=0.2, random_state=42)
 
-y_pred = model.predict(X_test)
+    scaler = StandardScaler()
+    to_scale = ['Capacity_GB', 'Speed_MHz']
+    X_train[to_scale] = scaler.fit_transform(X_train[to_scale])
+    X_test[to_scale] = scaler.transform(X_test[to_scale])
 
-print(f"mae: {mean_absolute_error(y_test, y_pred)}")
-print(f"mse: {mean_squared_error(y_test, y_pred)}")
-print(f"R2 Score: {r2_score(y_test, y_pred)}")
+    model = RandomForestRegressor(max_depth=100, n_estimators=200, min_samples_split=4, criterion='squared_error', random_state=42)
+    model.fit(X_train, y_train)
 
-print(y_test.max())
-#joblib.dump(model, 'price_regressor.pkl')
+    y_pred = model.predict(X_test)
+
+    print(f"mae: {mean_absolute_error(y_test, y_pred)}")
+    print(f"mse: {mean_squared_error(y_test, y_pred)}")
+    print(f"R2 Score: {r2_score(y_test, y_pred)}")
+
+    print(y_test.max())
+    joblib.dump(model, path_to_model)
+
+index = 0
+while index < len(model_names):
+    train_model(data_paths[index], model_names[index])
+    index += 1

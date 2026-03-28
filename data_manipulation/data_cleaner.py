@@ -129,7 +129,8 @@ def extract_ram_details(title):
         int(size) if size else None,
         int(gen.group(2)) if gen else None,
         float(freq) if freq else None,
-        latency,
+        float(latency) if latency else None,
+        float(voltage) if voltage else None,
         str(brand.group(1)) if brand else None,
         int(is_kit),
         1 if is_gaming else 0
@@ -191,7 +192,7 @@ def clean_data():
     """
     #print(raw_df.head())
     raw_df = pd.DataFrame(raw_data["data"])
-    raw_df[['Capacity_GB', 'Generation', 'Speed_MHz', 'Latency', 'Brand', 'Is_kit', 'Is_gaming']] = raw_df['title'].apply(extract_ram_details)
+    raw_df[['Capacity_GB', 'Generation', 'Speed_MHz', 'Latency', 'Voltage', 'Brand', 'Is_kit', 'Is_gaming']] = raw_df['title'].apply(extract_ram_details)
     raw_df['Final_Price'] = raw_df['price'].apply(lambda x: x.get('value') if isinstance(x, dict) else None)
     print(raw_df)
 
@@ -201,8 +202,9 @@ def clean_data():
     print(raw_df)
 
     raw_df = raw_df[(raw_df['Speed_MHz'] >= 1000) & (raw_df['Speed_MHz'] < 10000)]
-    raw_df = raw_df[['title', 'Capacity_GB', 'Generation', 'Speed_MHz', 'Latency', 'Brand', 'Is_kit', 'Is_gaming', 'Final_Price']]
-    clean_df = raw_df.dropna(subset=['title', 'Capacity_GB', 'Generation', 'Speed_MHz', 'Latency', 'Brand', 'Is_kit', 'Is_gaming', 'Final_Price'])
+    raw_df = raw_df[(raw_df['Voltage'] < 2) & (raw_df['Voltage'] > 0)]
+    raw_df = raw_df[['title', 'Capacity_GB', 'Generation', 'Speed_MHz', 'Latency', 'Voltage', 'Brand', 'Is_kit', 'Is_gaming', 'Final_Price']]
+    clean_df = raw_df.dropna(subset=['title', 'Capacity_GB', 'Generation', 'Speed_MHz', 'Latency', 'Voltage', 'Brand', 'Is_kit', 'Is_gaming', 'Final_Price'])
     print(clean_df)
 
     return clean_df
@@ -213,19 +215,11 @@ print(dataset)
 with open("../data/ram_data_cleaned_all.csv", "w", encoding='utf-8', newline='') as file:
     dataset.to_csv(file, index=False, encoding='utf-8')
 
-#ram_data_cleaned.csv
-#ram_data_cleaned_brand_unknown.csv
-#ram_data_cleaned_cl_None.csv
-#ram_data_cleaned_cl_default.csv
-#ram_data_cleaned_voltage_default.csv
-#ram_data_cleaned_volatge_None.csv
-#ram_data_cleaned_all
-
 """
 check = []
 check_unique = []
-check.extend(dataset.Latency)
-check_unique.extend(dataset.Latency.unique())
+check.extend(dataset.Voltage)
+check_unique.extend(dataset.Voltage.unique())
 print(check_unique)
 print(check)
 """
