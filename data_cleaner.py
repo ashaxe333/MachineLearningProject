@@ -77,6 +77,18 @@ def extract_ram_details(title):
 
     is_gaming = re.search(r'\b(Gaming|RGB|LED|ARGB|Heatsink|Heat\s*Spreader|Overclock|OC|CL14|CL16|Fury|Vengeance|Trident|Ripjaws|Dominator|Beast|Renegade|Viper|Ballistix|T-Force|XPG)\b', title, re.IGNORECASE)
 
+    latency_match = re.search(r'\b(CL)\s*(\d{1,2})\b', title, re.IGNORECASE)
+    latency = None
+    if latency_match:
+        latency = latency_match.group(2)
+    """
+    else:
+        if freq is None or gen is None:
+            latency = None
+        else:
+            latency = default_cl(int(gen.group(2)), float(freq), True if is_gaming else False)
+    """
+
     """
     if is_kit_match is None:
         print(f"is_kit_match none in: {title}")
@@ -107,30 +119,62 @@ def extract_ram_details(title):
         int(size) if size else None,
         int(gen.group(2)) if gen else None,
         float(freq) if freq else None,
+        latency,
         str(brand.group(1)) if brand else None,
         int(is_kit),
         1 if is_gaming else 0
     ])
 
+def default_cl(gen, freq, is_gaming):
+    """
+    Assigns default CL to a ram based on ram generation, frequency and if its gaming/office
+    :param gen: ram generation
+    :param freq: ram frequency
+    :param is_gaming: if ram is gaming
+    :return: default CL value
+    """
+    if gen == 3 and freq < 1332:
+        return 7 if is_gaming else 9
+    elif gen == 3 and 1333 <= freq < 1866:
+        return 9 if is_gaming else 11
+    elif gen == 3 and 1867 <= freq:
+        return 10 if is_gaming else 12
+    elif gen == 4 and freq < 2399:
+        return 11 if is_gaming else 13
+    elif gen == 4 and 2400 <= freq < 2933:
+        return 15 if is_gaming else 17
+    elif gen == 4 and 2934 <= freq < 3600:
+        return 16 if is_gaming else 22
+    elif gen == 4 and 3601 < freq:
+        return 18 if is_gaming else 26
+    elif gen == 5 and freq < 5599:
+        return 32 if is_gaming else 40
+    elif gen == 5 and 5600 <= freq < 6399:
+        return 36 if is_gaming else 42
+    elif gen == 5 and 6400 <= freq:
+        return 38 if is_gaming else 46
+    else:
+        return None
+
 def clean_data():
     """
-    Cleans extracted data
+    Cleans extracted ram data
     :return: cleaned dataset
     """
     #print(raw_df.head())
     raw_df = pd.DataFrame(raw_data["data"])
-    raw_df[['Capacity_GB', 'Generation', 'Speed_MHz', 'Brand', 'Is_kit', 'Is_gaming']] = raw_df['title'].apply(extract_ram_details)
+    raw_df[['Capacity_GB', 'Generation', 'Speed_MHz', 'Latency', 'Brand', 'Is_kit', 'Is_gaming']] = raw_df['title'].apply(extract_ram_details)
     raw_df['Final_Price'] = raw_df['price'].apply(lambda x: x.get('value') if isinstance(x, dict) else None)
     print(raw_df)
 
     raw_df = raw_df.drop_duplicates(subset=['asin'])
     raw_df = raw_df.dropna(subset=['asin'])
-    raw_df['Brand'] = raw_df['Brand'].fillna(None) #S None 1514 "Unknown"
+    raw_df['Brand'] = raw_df['Brand'].fillna("Unknown") #S None 1514 "Unknown"/None
     print(raw_df)
 
     raw_df = raw_df[(raw_df['Speed_MHz'] >= 1000) & (raw_df['Speed_MHz'] < 10000)]
-    raw_df = raw_df[['title', 'Capacity_GB', 'Generation', 'Speed_MHz', 'Brand', 'Is_kit', 'Is_gaming', 'Final_Price']]
-    clean_df = raw_df.dropna(subset=['title', 'Capacity_GB', 'Generation', 'Speed_MHz', 'Brand', 'Is_kit', 'Is_gaming', 'Final_Price'])
+    raw_df = raw_df[['title', 'Capacity_GB', 'Generation', 'Speed_MHz', 'Latency', 'Brand', 'Is_kit', 'Is_gaming', 'Final_Price']]
+    clean_df = raw_df.dropna(subset=['title', 'Capacity_GB', 'Generation', 'Speed_MHz', 'Latency', 'Brand', 'Is_kit', 'Is_gaming', 'Final_Price'])
     print(clean_df)
 
     return clean_df
@@ -138,14 +182,19 @@ def clean_data():
 dataset = clean_data()
 print(dataset)
 
-with open("ram_data_cleaned.csv", "w", encoding='utf-8', newline='') as file:
+with open("ram_data_cleaned_cl_None.csv", "w", encoding='utf-8', newline='') as file:
     dataset.to_csv(file, index=False, encoding='utf-8')
+
+#ram_data_cleaned.csv
+#ram_data_cleaned_brand_unknown.csv
+#ram_data_cleaned_cl_None.csv
+#ram_data_cleaned_cl_default.csv
 
 """
 check = []
 check_unique = []
-check.extend(dataset.Capacity_GB)
-check_unique.extend(dataset.Capacity_GB.unique())
+check.extend(dataset.Latency)
+check_unique.extend(dataset.Latency.unique())
 print(check_unique)
 print(check)
 """
