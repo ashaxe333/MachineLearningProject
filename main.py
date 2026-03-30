@@ -24,10 +24,7 @@ model_sets = {
     ]
 }
 
-
-
 scaler = joblib.load('columns/scaler.pkl')
-
 
 def predict_price(capacity_gb, generation, speed, latency, voltage, brand, is_kit):
     try:
@@ -66,36 +63,34 @@ def predict_price(capacity_gb, generation, speed, latency, voltage, brand, is_ki
         brand_col = f"Brand_{brand}"
         df[brand_col] = 1
 
-        # reindex zajistí, že df bude mít PŘESNĚ ty sloupce co columns_classifier a ve správném pořadí
+        # reindex zajistí, že df bude mít přesně ve správněm pořadí ty sloupce co columns_classifier
         df_clf = df.reindex(columns=classifier_columns, fill_value=0)
 
-        # 3. Scaling (pouze pro numerické hodnoty)
+        # 3. Scaling (musím i zde, protože je na tom model naučený)
         to_scale = ['Capacity_GB', 'Speed_MHz']
         df_clf[to_scale] = scaler.transform(df_clf[to_scale])
 
-        # 4. predict_proba - vrací např. [[0.51, 0.49]] -> 51% pro Office, 49% pro Gaming
+        # 4. predict_proba - vrací pole [[0.51, 0.49]] -> 51% pro Office, 49% pro Gaming
         probs = classifier_model.predict_proba(df_clf)[0]
         gaming_prob = probs[1]
         print(gaming_prob)
 
         # 5. Predikce Ceny (Krok 2)
         df_reg = df_clf.copy()
-
-        # Tady je trik: Do regresoru pošli tu spojitou pravděpodobnost (např. 0.49)!
-        # Regresor s tím umí pracovat lépe než s natvrdo hozenou nulou.
         df_reg['Is_gaming'] = gaming_prob
-        # Opět reindex, aby sloupce seděly s regresorem
         df_reg = df_reg.reindex(columns=regressor_columns, fill_value=0)
 
         price = regressor_model.predict(df_reg)[0]
 
+        """
         # graf: co a jak moc ovlivňuje cenu
         importances = regressor_model.feature_importances_  #O kolik sloupec ovlivnil cenu (%)
         features = regressor_columns #Jaký to hbyl sloupec
         data_imp = pd.Series(importances, index=features).sort_values(ascending=False) #Seřadím od největšího
         data_imp.head(10).plot(kind='barh') #nakreslí graf typu Bar horizontal (barh) s deseti největšími hodnotami
-        plt.title("Co nejvíc ovlivňuje cenu?") 
+        plt.title("Co nejvíc ovlivňuje cenu?")
         plt.show()
+        """
 
         return price, gaming_prob
 
