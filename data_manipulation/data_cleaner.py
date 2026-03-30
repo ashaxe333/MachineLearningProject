@@ -74,7 +74,14 @@ def extract_ram_details(title):
                 freq_key = f"{freq_type}-{freq_value}"
                 freq = gen_freq_dict.get(freq_key)
 
-    brand = re.search(r'\b(NEMIX|GIGASTONE|Corsair|G.SKILL|Crucial|TEAMGROUP|Kingston|XPG|Samsung|PNY|Timetec|ADATA|SK Hynix|A-Tech|Micron|Ballistix|HP|Patriot Memory|Patriot|Lenovo|QNAP|Adamanta)\b', title, re.IGNORECASE) #|OWC|Dell
+    brand = re.search(r'\b(Corsair|G.SKILL|Crucial|TEAMGROUP|Kingston|XPG|Samsung|PNY|Timetec|ADATA|SK Hynix|A-Tech|Micron|Ballistix|HP|Patriot Memory|Patriot|Lenovo|QNAP|Adamanta)\b', title, re.IGNORECASE) #servery: |OWC|Dell|NEMIX   #kazí_model:|Acclamator|PUSKILLNEMIX|GIGASTONE
+
+    """
+    #enterprice
+    enterprise_brands = re.search(r'\b(Samsung|SK Hynix|Micron|NEMIX|Adamanta|OWC|Dell|HP|Lenovo|QNAP|Timetec|A-Tech)\b', title, re.IGNORECASE)
+    #herní
+    gaming_brands = re.search(r'\b(Corsair|G.SKILL|XPG|Patriot|TEAMGROUP|ADATA|Ballistix|GIGASTONE|PUSKILL)\b', title, re.IGNORECASE)
+    """
 
     is_gaming = re.search(r'\b(Gaming|RGB|LED|ARGB|Heatsink|Heat\s*Spreader|Overclock|OC|Fury|Vengeance|Trident|Ripjaws|Dominator|Beast|Renegade|Viper|Ballistix|T-Force|XPG)\b', title, re.IGNORECASE) #|CL14|CL16
 
@@ -198,7 +205,7 @@ def clean_data():
 
     raw_df = raw_df.drop_duplicates(subset=['asin'])
     raw_df = raw_df.dropna(subset=['asin'])
-    raw_df['Brand'] = raw_df['Brand'].fillna(None) #S None 1514 "Unknown"/None
+    raw_df['Brand'] = raw_df['Brand'].fillna(None) # "Unknown" / None
     print(raw_df)
 
     raw_df = raw_df[(raw_df['Speed_MHz'] >= 1000) & (raw_df['Speed_MHz'] < 10000)]

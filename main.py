@@ -5,28 +5,26 @@ import matplotlib.pyplot as plt
 
 model_sets = {
     1: [
+        joblib.load('models/classifier_PC.pkl'),
+        joblib.load('models/regressor_PC.pkl'),
+        joblib.load('columns/classifier_cols_PC.pkl'),
+        joblib.load('columns/regressor_cols_PC.pkl')
+    ],
+    2: [
         joblib.load('models/classifier.pkl'),
         joblib.load('models/regressor.pkl'),
         joblib.load('columns/classifier_cols.pkl'),
         joblib.load('columns/regressor_cols.pkl')
     ],
+    3: [
+        joblib.load('models/classifier_all.pkl'),
+        joblib.load('models/regressor_all.pkl'),
+        joblib.load('columns/classifier_cols_all.pkl'),
+        joblib.load('columns/regressor_cols_all.pkl')
+    ]
 }
 
-classifier = joblib.load('models/classifier.pkl')
-regressor = joblib.load('models/regressor.pkl')
-classifier_cols = joblib.load('columns/classifier_cols.pkl')
-regressor_cols = joblib.load('columns/regressor_cols.pkl')
 
-#all
-classifier_all = joblib.load('models/classifier_all.pkl')
-regressor_all = joblib.load('models/regressor_all.pkl')
-classifier_cols_all = joblib.load('columns/classifier_cols_all.pkl')
-regressor_cols_all = joblib.load('columns/regressor_cols_all.pkl')
-
-classifier_PC = joblib.load('models/classifier_PC.pkl')
-regressor_PC = joblib.load('models/regressor_PC.pkl')
-classifier_cols_PC = joblib.load('columns/classifier_cols_PC.pkl')
-regressor_cols_PC = joblib.load('columns/regressor_cols_PC.pkl')
 
 scaler = joblib.load('columns/scaler.pkl')
 
@@ -43,26 +41,23 @@ def predict_price(capacity_gb, generation, speed, latency, voltage, brand, is_ki
             'Is_kit': [int(is_kit)]
         }
 
-        classifier_model, regression_model, classifier_columns, regressor_columns = None, None, None, None
+        classifier_model, regression_model, classifier_columns, regressor_columns, model_number = None, None, None, None, None
 
-        if user_data['Capacity_GB'][0] <= 128.0:
+        if 0.0 < user_data['Capacity_GB'][0] <= 128.0:
             print("!!! PC !!!")
-            classifier_model = classifier_PC
-            regressor_model = regressor_PC
-            classifier_columns = classifier_cols_PC
-            regressor_columns = regressor_cols_PC
+            model_number = 1
         elif 128.0 < user_data['Capacity_GB'][0] <= 768.0:
             print("!!! ENTERPRICE !!!")
-            classifier_model = classifier
-            regressor_model = regressor
-            classifier_columns = classifier_cols
-            regressor_columns = regressor_cols
+            model_number = 2
         else:
-            print("!!! MONSTERS !!!")
-            classifier_model = classifier_all
-            regressor_model = regressor_all
-            classifier_columns = regressor_cols_all
-            regressor_columns = regressor_cols_all
+            print("!!! SERVER MONSTERS !!!")
+            print("Top price - 27 118$ \n (For example 1004+GB capacity gives max price, so predicted price can be much higher depending on what you entered)")
+            model_number = 3
+
+        classifier_model = model_sets[model_number][0]
+        regressor_model = model_sets[model_number][1]
+        classifier_columns = model_sets[model_number][2]
+        regressor_columns = model_sets[model_number][3]
 
         df = pd.DataFrame(user_data)
 
@@ -71,7 +66,6 @@ def predict_price(capacity_gb, generation, speed, latency, voltage, brand, is_ki
         brand_col = f"Brand_{brand}"
         df[brand_col] = 1
 
-        # TEĎ TA MAGIE: Doplníme všechny ostatní Brand_ nuly, které model čeká
         # reindex zajistí, že df bude mít PŘESNĚ ty sloupce co columns_classifier a ve správném pořadí
         df_clf = df.reindex(columns=classifier_columns, fill_value=0)
 
@@ -79,25 +73,9 @@ def predict_price(capacity_gb, generation, speed, latency, voltage, brand, is_ki
         to_scale = ['Capacity_GB', 'Speed_MHz']
         df_clf[to_scale] = scaler.transform(df_clf[to_scale])
 
-        """
-        # 4. Predikce Is_gaming (Krok 1)
-        # Použijeme tvůj nápad s pravděpodobností (pokud chceš být profík)
-        # is_gaming_prob = classifier.predict_proba(df_clf)[0][1]
-        is_gaming = classifier_model.predict(df_clf)[0]
-
-        # 5. Příprava pro Regresor (Krok 2)
-        # Regresor má možná jiné sloupce (třeba tam má Is_gaming navíc)
-        df_reg = df_clf.copy()
-        df_reg['Is_gaming'] = is_gaming
-        """
-
-        # 4. Predikce Is_gaming (Krok 1) - Místo predict použijeme predict_proba
-        # predict_proba vrací např. [[0.51, 0.49]] -> 51% pro Office, 49% pro Gaming
+        # 4. predict_proba - vrací např. [[0.51, 0.49]] -> 51% pro Office, 49% pro Gaming
         probs = classifier_model.predict_proba(df_clf)[0]
-        gaming_prob = probs[1]  # To je ta pravděpodobnost pro "Herní" (třída 1)
-
-        # Teď už nemusíš vracet jen 0/1, ale přímo tohle číslo
-        is_gaming = 1 if gaming_prob > 0.5 else 0
+        gaming_prob = probs[1]
         print(gaming_prob)
 
         # 5. Predikce Ceny (Krok 2)
@@ -111,13 +89,12 @@ def predict_price(capacity_gb, generation, speed, latency, voltage, brand, is_ki
 
         price = regressor_model.predict(df_reg)[0]
 
-        # co a jak moc ovlivňuje cenu
-        importances = regressor_model.feature_importances_
-        features = regressor_columns
-        data_imp = pd.Series(importances, index=features).sort_values(ascending=False)
-
-        data_imp.head(10).plot(kind='barh')
-        plt.title("Co nejvíc ovlivňuje cenu?")
+        # graf: co a jak moc ovlivňuje cenu
+        importances = regressor_model.feature_importances_  #O kolik sloupec ovlivnil cenu (%)
+        features = regressor_columns #Jaký to hbyl sloupec
+        data_imp = pd.Series(importances, index=features).sort_values(ascending=False) #Seřadím od největšího
+        data_imp.head(10).plot(kind='barh') #nakreslí graf typu Bar horizontal (barh) s deseti největšími hodnotami
+        plt.title("Co nejvíc ovlivňuje cenu?") 
         plt.show()
 
         return price, gaming_prob
@@ -127,12 +104,12 @@ def predict_price(capacity_gb, generation, speed, latency, voltage, brand, is_ki
         return None, None
 
 
-price_estimate, ram_type_prob = predict_price(1536, 5, 6400, 52, 1.25, "-", 1)
+price_estimate, ram_type_prob = predict_price(960, 5, 6400, 52, 1.1, "NEMIX", 1)
 ram_type = None
 if 0 <= ram_type_prob < 0.25:
-    ram_type = 'OFFICE'
-elif 0.3 <= ram_type_prob < 0.45:
-    ram_type = 'rather OFFICE'
+    ram_type = 'not GAMING'
+elif 0.25 <= ram_type_prob < 0.45:
+    ram_type = 'rather not GAMING'
 elif 0.45 <= ram_type_prob < 0.55:
     ram_type = 'cannot determine'
 elif 0.55 <= ram_type_prob < 0.8:

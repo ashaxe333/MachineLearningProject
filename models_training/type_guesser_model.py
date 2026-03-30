@@ -75,7 +75,7 @@ def train_model(path_to_file, path_to_model, path_to_columns):
         once = False
     """
 
-train_model("../data/ram_data_cleaned_PC.csv", '../models/classifier_PC.pkl', '../columns/classifier_cols_PC.pkl')
+train_model(data_paths[6], model_names[6], column_paths[6])
 
 """
 index = 0

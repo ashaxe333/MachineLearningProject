@@ -21,7 +21,7 @@ model_names = [
     '../models/regressor_cl_default.pkl',
     '../models/regressor_brand_unknown.pkl',
     '../models/regressor_wo_voltage.pkl',
-    '../models/regressor_all.pkl'
+    '../models/regressor_all.pkl',
     '../models/regressor_PC.pkl'
 ]
 
@@ -62,7 +62,7 @@ def train_model(path_to_file, path_to_model, path_to_columns):
     joblib.dump(model, path_to_model)
     joblib.dump(X_train.columns.tolist(), path_to_columns)
 
-train_model('../data/ram_data_cleaned_PC.csv', '../models/regressor_PC.pkl', '../columns/regressor_cols_PC.pkl')
+train_model(data_paths[6], model_names[6], column_paths[6])
 
 """
 index = 0
