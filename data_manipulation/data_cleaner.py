@@ -74,9 +74,9 @@ def extract_ram_details(title):
                 freq_key = f"{freq_type}-{freq_value}"
                 freq = gen_freq_dict.get(freq_key)
 
-    brand = re.search(r'\b(Corsair|G.SKILL|Crucial|TEAMGROUP|Kingston|XPG|Samsung|PNY|Timetec|ADATA|SK Hynix|A-Tech|OWC|Micron|Ballistix|HP|Dell|Patriot Memory|Patriot|Lenovo|QNAP|Adamanta)\b', title, re.IGNORECASE)
+    brand = re.search(r'\b(NEMIX|GIGASTONE|Corsair|G.SKILL|Crucial|TEAMGROUP|Kingston|XPG|Samsung|PNY|Timetec|ADATA|SK Hynix|A-Tech|Micron|Ballistix|HP|Patriot Memory|Patriot|Lenovo|QNAP|Adamanta)\b', title, re.IGNORECASE) #|OWC|Dell
 
-    is_gaming = re.search(r'\b(Gaming|RGB|LED|ARGB|Heatsink|Heat\s*Spreader|Overclock|OC|CL14|CL16|Fury|Vengeance|Trident|Ripjaws|Dominator|Beast|Renegade|Viper|Ballistix|T-Force|XPG)\b', title, re.IGNORECASE)
+    is_gaming = re.search(r'\b(Gaming|RGB|LED|ARGB|Heatsink|Heat\s*Spreader|Overclock|OC|Fury|Vengeance|Trident|Ripjaws|Dominator|Beast|Renegade|Viper|Ballistix|T-Force|XPG)\b', title, re.IGNORECASE) #|CL14|CL16
 
     latency_match = re.search(r'\b(CL)\s*(\d{1,2})\b', title, re.IGNORECASE)
     latency = None
@@ -179,9 +179,9 @@ def default_voltage(gen, is_gaming):
     elif gen == "DDR3L":
         return 1.35
     elif gen == "DDR4":
-        return 1.4 if is_gaming else 1.2
+        return 1.35 if is_gaming else 1.2
     elif gen == "DDR5":
-        return 1.3 if is_gaming else 1.1
+        return 1.25 if is_gaming else 1.1
     else:
         return None
 
@@ -198,11 +198,12 @@ def clean_data():
 
     raw_df = raw_df.drop_duplicates(subset=['asin'])
     raw_df = raw_df.dropna(subset=['asin'])
-    raw_df['Brand'] = raw_df['Brand'].fillna("Unknown") #S None 1514 "Unknown"/None
+    raw_df['Brand'] = raw_df['Brand'].fillna(None) #S None 1514 "Unknown"/None
     print(raw_df)
 
     raw_df = raw_df[(raw_df['Speed_MHz'] >= 1000) & (raw_df['Speed_MHz'] < 10000)]
     raw_df = raw_df[(raw_df['Voltage'] < 2) & (raw_df['Voltage'] > 0)]
+    raw_df = raw_df[raw_df['Capacity_GB'] <= 128]
     raw_df = raw_df[['title', 'Capacity_GB', 'Generation', 'Speed_MHz', 'Latency', 'Voltage', 'Brand', 'Is_kit', 'Is_gaming', 'Final_Price']]
     clean_df = raw_df.dropna(subset=['title', 'Capacity_GB', 'Generation', 'Speed_MHz', 'Latency', 'Voltage', 'Brand', 'Is_kit', 'Is_gaming', 'Final_Price'])
     print(clean_df)
@@ -212,17 +213,17 @@ def clean_data():
 dataset = clean_data()
 print(dataset)
 
-with open("../data/ram_data_cleaned_all.csv", "w", encoding='utf-8', newline='') as file:
+with open("../data/ram_data_cleaned_PC.csv", "w", encoding='utf-8', newline='') as file:
     dataset.to_csv(file, index=False, encoding='utf-8')
 
-"""
+
 check = []
 check_unique = []
-check.extend(dataset.Voltage)
-check_unique.extend(dataset.Voltage.unique())
+check.extend(dataset.Capacity_GB)
+check_unique.extend(dataset.Capacity_GB.unique())
 print(check_unique)
 print(check)
-"""
+
 
 """
 plt.scatter(dataset['Capacity_GB'], dataset['Final_Price'])

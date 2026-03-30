@@ -11,25 +11,28 @@ data_paths = [
     "../data/ram_data_cleaned_cl_default.csv",
     "../data/ram_data_cleaned_brand_unknown.csv",
     "../data/ram_data_cleaned_wo_voltage.csv",
-    "../data/ram_data_cleaned_all.csv"
+    "../data/ram_data_cleaned_all.csv",
+    "../data/ram_data_cleaned_PC.csv"
 ]
 
 model_names = [
-    '../models/price_regressor.pkl',
-    '../models/price_regressor_cl_None.pkl',
-    '../models/price_regressor_cl_default.pkl',
-    '../models/price_regressor_brand_unknown.pkl',
-    '../models/price_regressor_wo_voltage.pkl',
-    '../models/price_regressor_all.pkl'
+    '../models/regressor.pkl',
+    '../models/regressor_cl_None.pkl',
+    '../models/regressor_cl_default.pkl',
+    '../models/regressor_brand_unknown.pkl',
+    '../models/regressor_wo_voltage.pkl',
+    '../models/regressor_all.pkl'
+    '../models/regressor_PC.pkl'
 ]
 
 column_paths = [
-    '../columns/price_regressor_columns.pkl',
-    '../columns/price_regressor_cl_None_columns.pkl',
-    '../columns/price_regressor_cl_default_columns.pkl',
-    '../columns/price_regressor_brand_unknown_columns.pkl',
-    '../columns/price_regressor_wo_voltage_columns.pkl',
-    '../columns/price_regressor_all_columns.pkl',
+    '../columns/regressor_cols.pkl',
+    '../columns/regressor_cols_cl_None.pkl',
+    '../columns/regressor_cols_cl_default.pkl',
+    '../columns/regressor_cols_brand_unknown.pkl',
+    '../columns/regressor_cols_wo_voltage.pkl',
+    '../columns/regressor_cols_all.pkl',
+    '../columns/regressor_cols_PC.pkl'
 ]
 
 def train_model(path_to_file, path_to_model, path_to_columns):
@@ -59,7 +62,11 @@ def train_model(path_to_file, path_to_model, path_to_columns):
     joblib.dump(model, path_to_model)
     joblib.dump(X_train.columns.tolist(), path_to_columns)
 
+train_model('../data/ram_data_cleaned_PC.csv', '../models/regressor_PC.pkl', '../columns/regressor_cols_PC.pkl')
+
+"""
 index = 0
 while index < len(model_names):
     train_model(data_paths[index], model_names[index], column_paths[index])
     index += 1
+"""
