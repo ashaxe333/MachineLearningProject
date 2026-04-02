@@ -6,31 +6,19 @@ from sklearn.metrics import accuracy_score, confusion_matrix, classification_rep
 import joblib
 
 data_paths = [
-    "../data/ram_data_cleaned.csv",
-    "../data/ram_data_cleaned_cl_None.csv",
-    "../data/ram_data_cleaned_cl_default.csv",
-    "../data/ram_data_cleaned_brand_unknown.csv",
-    "../data/ram_data_cleaned_wo_voltage.csv",
-    "../data/ram_data_cleaned_all.csv",
-    "../data/ram_data_cleaned_PC.csv"
+    '../data/ram_data_cleaned.csv',
+    '../data/ram_data_cleaned_all.csv',
+    '../data/ram_data_cleaned_PC.csv'
 ]
 
 model_names = [
     '../models/classifier.pkl',
-    '../models/classifier_cl_None.pkl',
-    '../models/classifier_cl_default.pkl',
-    '../models/classifier_brand_unknown.pkl',
-    '../models/classifier_wo_voltage.pkl',
     '../models/classifier_all.pkl',
     '../models/classifier_PC.pkl'
 ]
 
 column_paths = [
     '../columns/classifier_cols.pkl',
-    '../columns/classifier_cols_cl_None.pkl',
-    '../columns/classifier_cols_cl_default.pkl',
-    '../columns/classifier_cols_brand_unknown.pkl',
-    '../columns/classifier_cols_wo_voltage.pkl',
     '../columns/classifier_cols_all.pkl',
     '../columns/classifier_cols_PC.pkl'
 ]
@@ -68,6 +56,7 @@ def train_model(path_to_file, path_to_model, path_to_columns):
 
     joblib.dump(model, path_to_model)
     joblib.dump(X_train.columns.tolist(), path_to_columns)
+
     """
     once = True
     while once:
@@ -75,7 +64,7 @@ def train_model(path_to_file, path_to_model, path_to_columns):
         once = False
     """
 
-train_model(data_paths[6], model_names[6], column_paths[6])
+train_model(data_paths[2], model_names[2], column_paths[2])
 
 """
 index = 0

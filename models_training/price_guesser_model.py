@@ -6,31 +6,19 @@ from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 import joblib
 
 data_paths = [
-    "../data/ram_data_cleaned.csv",
-    "../data/ram_data_cleaned_cl_None.csv",
-    "../data/ram_data_cleaned_cl_default.csv",
-    "../data/ram_data_cleaned_brand_unknown.csv",
-    "../data/ram_data_cleaned_wo_voltage.csv",
-    "../data/ram_data_cleaned_all.csv",
-    "../data/ram_data_cleaned_PC.csv"
+    '../data/ram_data_cleaned.csv',
+    '../data/ram_data_cleaned_all.csv',
+    '../data/ram_data_cleaned_PC.csv'
 ]
 
 model_names = [
     '../models/regressor.pkl',
-    '../models/regressor_cl_None.pkl',
-    '../models/regressor_cl_default.pkl',
-    '../models/regressor_brand_unknown.pkl',
-    '../models/regressor_wo_voltage.pkl',
     '../models/regressor_all.pkl',
     '../models/regressor_PC.pkl'
 ]
 
 column_paths = [
     '../columns/regressor_cols.pkl',
-    '../columns/regressor_cols_cl_None.pkl',
-    '../columns/regressor_cols_cl_default.pkl',
-    '../columns/regressor_cols_brand_unknown.pkl',
-    '../columns/regressor_cols_wo_voltage.pkl',
     '../columns/regressor_cols_all.pkl',
     '../columns/regressor_cols_PC.pkl'
 ]
@@ -62,7 +50,7 @@ def train_model(path_to_file, path_to_model, path_to_columns):
     joblib.dump(model, path_to_model)
     joblib.dump(X_train.columns.tolist(), path_to_columns)
 
-train_model(data_paths[6], model_names[6], column_paths[6])
+train_model(data_paths[2], model_names[2], column_paths[2])
 
 """
 index = 0
