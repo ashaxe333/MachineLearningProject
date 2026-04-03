@@ -97,7 +97,10 @@ def predict_price(capacity_gb, generation, speed, latency, voltage, brand, is_ki
 
         prices = []
         gaming_probs = []
-        values = []
+        if gaming_latency is None and office_latency is None and gaming_voltage is None and office_voltage is None:
+            values = None
+        else:
+            values = []
 
         for data in user_data:
             df = pd.DataFrame(data)
@@ -121,7 +124,9 @@ def predict_price(capacity_gb, generation, speed, latency, voltage, brand, is_ki
             df_reg = df_reg.reindex(columns=regressor_columns, fill_value=0)
 
             prices.append(regressor_model.predict(df_reg)[0])
-            values.append((data['Latency'], data['Voltage']))
+
+            if values is not None:
+                values.append((data['Latency'], data['Voltage']))
 
             """
             # graf: co a jak moc ovlivňuje cenu
@@ -138,8 +143,8 @@ def predict_price(capacity_gb, generation, speed, latency, voltage, brand, is_ki
         # Odstranění duplicit při zachování pořadí
         unique_results = [ram_class]
         for result in final_results:
-            unique_part = re.sub(r"- S\d+ -", "", result).strip()
-            if unique_part not in [re.sub(r"- S\d+ -", "", u).strip() for u in unique_results]:
+            unique_part = re.sub(r"- .+ -", "", result).strip()
+            if unique_part not in [re.sub(r"- .+ -", "", u).strip() for u in unique_results]:
                 unique_results.append(result)
 
         return unique_results
@@ -168,8 +173,11 @@ def  print_type_a_price(price_estimates, ram_type_probs, values_cl_v):
             else:
                 ram_type = 'GAMING'
 
-            cl, v = values_cl_v[index]
-            results.append(f"\n - S{index+1} (latency: {cl}, voltage: {v}) - \n RAM type: {ram_type}, Odhadovaná cena: {price_estimates[index]:.2f}$")
+            if values_cl_v is not None:
+                cl, v = values_cl_v[index]
+                results.append(f"\n - S{index+1} (latency: {cl}, voltage: {v}) - \n RAM type: {ram_type}, Odhadovaná cena: {price_estimates[index]:.2f}$")
+            else:
+                results.append(f"\n - S{index + 1} - \n RAM type: {ram_type}, Odhadovaná cena: {price_estimates[index]:.2f}$")
             index += 1
 
         return results
