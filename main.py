@@ -28,7 +28,6 @@ model_sets = {
 scaler = joblib.load('columns/scaler.pkl')
 
 def create_data(capacity_gb, generation, speed, latency: list, voltage: list, is_kit, user_data: list):
-    data = None
 
     for l, v in zip(latency, voltage):
         data = {
@@ -41,34 +40,33 @@ def create_data(capacity_gb, generation, speed, latency: list, voltage: list, is
         }
         user_data.append(data)
 
-    print(len(user_data))
-    print(user_data)
+    #print(len(user_data))
+    #print(user_data)
     return user_data
 
 def predict_price(capacity_gb, generation, speed, latency, voltage, brand, is_kit):
     try:
         if capacity_gb is None or speed is None:
-            raise Exception('RAM capacity and speed are required')
+            raise ValueError('RAM capacity and speed are required')
 
         if generation is None:
             generation = default_gen(speed, capacity_gb)
 
         gaming_latency, office_latency = None, None
         if latency is None:
-            print(f"Latency is None")
+            #print(f"Latency is None")
             gaming_latency = default_cl(generation, speed, True)
             office_latency = default_cl(generation, speed, False)
 
         gaming_voltage, office_voltage = None, None
         if voltage is None:
-            print(f"Voltage is None")
+            #print(f"Voltage is None")
             gaming_voltage = default_voltage(f"DDR{generation}", True)
             office_voltage = default_voltage(f"DDR{generation}", False)
 
         if is_kit is None:
             is_kit = 1
 
-        # 1. Vytvoření základního slovníku (bez Brandu pro One-Hot)
         user_data = []
         create_data(
             capacity_gb,
@@ -83,14 +81,13 @@ def predict_price(capacity_gb, generation, speed, latency, voltage, brand, is_ki
         classifier_model, regression_model, classifier_columns, regressor_columns, model_number = None, None, None, None, None
 
         if 0.0 < user_data[0]['Capacity_GB'][0] <= 128.0:
-            print("!!! PC !!!")
+            ram_class = "!!! PC !!!"
             model_number = 1
         elif 128.0 < user_data[0]['Capacity_GB'][0] <= 768.0:
-            print("!!! ENTERPRICE !!!")
+            ram_class = "!!! ENTERPRICE !!!"
             model_number = 2
         else:
-            print("!!! SERVER MONSTERS !!!")
-            print("Top price - 27118$ \n (For example 1004+GB capacity gives max price, so predicted price can be much higher depending on what you entered)")
+            ram_class = "!!! SERVER MONSTERS !!! \n\n Top price - 27118$ \n (For example 1004+GB capacity gives max price, so predicted price can be much higher depending on what you entered)"
             model_number = 3
 
         classifier_model = model_sets[model_number][0]
@@ -100,49 +97,46 @@ def predict_price(capacity_gb, generation, speed, latency, voltage, brand, is_ki
 
         prices = []
         gaming_probs = []
+        values = []
+
         for data in user_data:
             df = pd.DataFrame(data)
 
-            # 2. Vyřešení Brandu (One-Hot Encoding)
-            # Vytvoříme sloupec s vybranou značkou
             brand_col = f"Brand_{brand}"
             df[brand_col] = 1
 
-            # reindex zajistí, že df bude mít přesně ve správněm pořadí ty sloupce co columns_classifier
             df_clf = df.reindex(columns=classifier_columns, fill_value=0)
 
-            # 3. Scaling (musím i zde, protože je na tom model naučený)
             to_scale = ['Capacity_GB', 'Speed_MHz']
             df_clf[to_scale] = scaler.transform(df_clf[to_scale])
 
-            # 4. predict_proba - vrací pole [[0.51, 0.49]] -> 51% pro Office, 49% pro Gaming
+            # predict_proba - vrací pole [[0.51, 0.49]] -> 51% pro Office, 49% pro Gaming
             probs = classifier_model.predict_proba(df_clf)[0]
             gaming_prob = probs[1]
             gaming_probs.append(gaming_prob)
             #print(gaming_prob)
 
-            # 5. Predikce Ceny (Krok 2)
             df_reg = df_clf.copy()
             df_reg['Is_gaming'] = gaming_prob
             df_reg = df_reg.reindex(columns=regressor_columns, fill_value=0)
 
             prices.append(regressor_model.predict(df_reg)[0])
+            values.append((data['Latency'], data['Voltage']))
 
-        """
-        # graf: co a jak moc ovlivňuje cenu
-        importances = regressor_model.feature_importances_  #O kolik sloupec ovlivnil cenu (%)
-        features = regressor_columns #Jaký to byl sloupec
-        data_imp = pd.Series(importances, index=features).sort_values(ascending=False) #Seřadím od největšího
-        data_imp.head(10).plot(kind='barh') #nakreslí graf typu Bar horizontal (barh) s deseti největšími hodnotami
-        plt.title("Co nejvíc ovlivňuje cenu?")
-        plt.show()
-        """
+            """
+            # graf: co a jak moc ovlivňuje cenu
+            importances = regressor_model.feature_importances_  #O kolik sloupec ovlivnil cenu (%)
+            features = regressor_columns #Jaký to byl sloupec
+            data_imp = pd.Series(importances, index=features).sort_values(ascending=False) #Seřadím od největšího
+            data_imp.head(10).plot(kind='barh') #nakreslí graf typu Bar horizontal (barh) s deseti největšími hodnotami
+            plt.title("Co nejvíc ovlivňuje cenu?")
+            plt.show()
+            """
 
-        #return print_type_a_price(prices, gaming_probs)
-        final_results = print_type_a_price(prices, gaming_probs)
+        final_results = print_type_a_price(prices, gaming_probs, values)
 
         # Odstranění duplicit při zachování pořadí
-        unique_results = []
+        unique_results = [ram_class]
         for result in final_results:
             unique_part = re.sub(r"- S\d+ -", "", result).strip()
             if unique_part not in [re.sub(r"- S\d+ -", "", u).strip() for u in unique_results]:
@@ -151,11 +145,13 @@ def predict_price(capacity_gb, generation, speed, latency, voltage, brand, is_ki
         return unique_results
 
     except ValueError as e:
-        print(f"err1: {e}")
+        #print(f"err1: {e}")
+        return f"err1: {e}"
     except TypeError as e:
-        print(f"err2: {e}")
+        #print(f"err2: {e}")
+        return f"err1: {e}"
 
-def  print_type_a_price(price_estimates, ram_type_probs):
+def  print_type_a_price(price_estimates, ram_type_probs, values_cl_v):
     results = []
 
     try:
@@ -172,13 +168,17 @@ def  print_type_a_price(price_estimates, ram_type_probs):
             else:
                 ram_type = 'GAMING'
 
-            results.append(f"\n - S{index+1} - \n RAM type: {ram_type}, Odhadovaná cena: {price_estimates[index]:.2f}$")
+            cl, v = values_cl_v[index]
+            results.append(f"\n - S{index+1} (latency: {cl}, voltage: {v}) - \n RAM type: {ram_type}, Odhadovaná cena: {price_estimates[index]:.2f}$")
             index += 1
 
         return results
 
-    except TypeError as e:
-        print(f"err3: {e}")
+    except ValueError as e:
+        #print(f"err3: {e}")
+        return f"err3: {e}"
 
+"""
 for i in predict_price(512, 5, 6400, None, None, "NEMIX", 1):
     print(i)
+"""
