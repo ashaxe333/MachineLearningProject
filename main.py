@@ -26,7 +26,7 @@ model_sets = {
     ]
 }
 
-scaler = joblib.load('columns/scaler.pkl')
+scaler = joblib.load(resource_path('columns/scaler.pkl'))
 
 def create_data(capacity_gb, generation, speed, latency: list, voltage: list, is_kit, user_data: list):
 
