@@ -1,27 +1,28 @@
 import re
 import pandas as pd
 import joblib
+from lib.path_handler import resource_path
 import matplotlib.pyplot as plt
 from data_manipulation.default_values import *
 
 model_sets = {
     1: [
-        joblib.load('models/classifier_PC.pkl'),
-        joblib.load('models/regressor_PC.pkl'),
-        joblib.load('columns/classifier_cols_PC.pkl'),
-        joblib.load('columns/regressor_cols_PC.pkl')
+        joblib.load(resource_path('models/classifier_PC.pkl')),
+        joblib.load(resource_path('models/regressor_PC.pkl')),
+        joblib.load(resource_path('columns/classifier_cols_PC.pkl')),
+        joblib.load(resource_path('columns/regressor_cols_PC.pkl'))
     ],
     2: [
-        joblib.load('models/classifier.pkl'),
-        joblib.load('models/regressor.pkl'),
-        joblib.load('columns/classifier_cols.pkl'),
-        joblib.load('columns/regressor_cols.pkl')
+        joblib.load(resource_path('models/classifier.pkl')),
+        joblib.load(resource_path('models/regressor.pkl')),
+        joblib.load(resource_path('columns/classifier_cols.pkl')),
+        joblib.load(resource_path('columns/regressor_cols.pkl'))
     ],
     3: [
-        joblib.load('models/classifier_all.pkl'),
-        joblib.load('models/regressor_all.pkl'),
-        joblib.load('columns/classifier_cols_all.pkl'),
-        joblib.load('columns/regressor_cols_all.pkl')
+        joblib.load(resource_path('models/classifier_all.pkl')),
+        joblib.load(resource_path('models/regressor_all.pkl')),
+        joblib.load(resource_path('columns/classifier_cols_all.pkl')),
+        joblib.load(resource_path('columns/regressor_cols_all.pkl'))
     ]
 }
 

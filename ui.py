@@ -3,11 +3,14 @@ from tkinter import messagebox, ttk
 from main import predict_price
 
 def run_ui():
+    """
+    Creates and render UI
+    """
     root = tk.Tk()
     root.title("RAM Price Predictor")
     root.geometry("650x650")
 
-    # Hlavní kontejner s okrajem
+    # Hlavní kontejner
     main_frame = ttk.Frame(root, padding="20")
     main_frame.pack(fill=tk.BOTH, expand=True)
 
@@ -85,7 +88,6 @@ def run_ui():
     text_result.pack(fill=tk.BOTH, expand=True)
 
     root.mainloop()
-
 
 if __name__ == "__main__":
     run_ui()
