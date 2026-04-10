@@ -68,7 +68,7 @@ Aplikace využívá následující knihovny třetích stran:
 ## 6. Konfigurace a instalace
 ### Instalace
 Aplikace nevyžaduje instalaci. Je distribuována jako přenositelný (portable) soubor:
-1. Stáhněte soubor `ui.exe` (zde na githubu v sekci releases).
+1. Stáhněte soubor `ui.exe` (https://github.com/ashaxe333/MachineLearningProject/releases/tag/v2.0).
 2. Spusťte soubor dvojklikem.
 
 ### Konfigurace
