@@ -25,11 +25,9 @@ def run_ui():
 
     def on_submit():
         try:
-            # Načtení povinných hodnot
             c = float(entry_cap.get())
             s = float(entry_speed.get())
 
-            # Načtení z Comboboxů a Entry polí
             g = int(combo_gen.get()) if combo_gen.get() else None
             b = combo_brand.get() if combo_brand.get() else "Unknown"
             l = float(entry_lat.get()) if entry_lat.get().strip() else None
@@ -52,7 +50,7 @@ def run_ui():
         except Exception as e:
             messagebox.showerror("Unknown Error", str(e))
 
-    # Pole, která zůstávají jako Entry (vstup čísel)
+    #Entry pole
     fields = [
         ("*Capacity (GB):", "entry_cap"),
         ("*Frequency (MHz):", "entry_speed"),
@@ -69,7 +67,7 @@ def run_ui():
         entry.pack(side=tk.RIGHT, expand=True, fill=tk.X)
         entries[var_name] = entry
 
-    # --- BRAND DROPDOWN ---
+    #Brand
     brand_frame = ttk.Frame(main_frame)
     brand_frame.pack(fill=tk.X, pady=5)
     ttk.Label(brand_frame, text="Brand:", width=25).pack(side=tk.LEFT)
@@ -77,14 +75,14 @@ def run_ui():
     combo_brand.set("Unknown")  # Výchozí hodnota
     combo_brand.pack(side=tk.RIGHT, expand=True, fill=tk.X)
 
-    # --- GENERATION DROPDOWN ---
+    #Gen
     gen_frame = ttk.Frame(main_frame)
     gen_frame.pack(fill=tk.X, pady=5)
     ttk.Label(gen_frame, text="Generation DDR:", width=25).pack(side=tk.LEFT)
     combo_gen = ttk.Combobox(gen_frame, values=["3", "4", "5"])
     combo_gen.pack(side=tk.RIGHT, expand=True, fill=tk.X)
 
-    # Checkboxy
+    #Checkboxy
     check_frame = ttk.Frame(main_frame)
     check_frame.pack(pady=10)
 
@@ -94,7 +92,7 @@ def run_ui():
     var_server = tk.BooleanVar(value=False)
     ttk.Checkbutton(check_frame, text="Server RAM (ECC)?", variable=var_server).pack(side=tk.LEFT, padx=10)
 
-    # Přiřazení proměnných
+    #Přiřazení proměnných
     entry_cap = entries["entry_cap"]
     entry_speed = entries["entry_speed"]
     entry_lat = entries["entry_lat"]
