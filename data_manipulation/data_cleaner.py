@@ -74,15 +74,15 @@ def extract_ram_details(title):
             else:
                 freq_key = f"{freq_type}-{freq_value}"
                 freq = gen_freq_dict.get(freq_key)
+    #_PC
+    brand = re.search(r'\b(Acer|Corsair|G.SKILL|Crucial|TEAMGROUP|Kingston|XPG|Samsung|PNY|Timetec|ADATA|SK Hynix|A-Tech|Micron|Ballistix|HP|Patriot Memory|Patriot|Lenovo|QNAP|Adamanta)\b', title, re.IGNORECASE) #servery: |OWC|Dell|NEMIX   #kazí_model:|Acclamator|PUSKILL|GIGASTONE
+    #_all
+    #brand = re.search(r'\b(Acer|Corsair|G.SKILL|Crucial|TEAMGROUP|Kingston|XPG|Samsung|PNY|Timetec|ADATA|SK Hynix|A-Tech|Micron|Ballistix|HP|Patriot Memory|Patriot|Lenovo|QNAP|Adamanta|OWC|Dell|NEMIX|Acclamator|PUSKILL|GIGASTONE)\b', title, re.IGNORECASE)
 
-    brand = re.search(r'\b(Corsair|G.SKILL|Crucial|TEAMGROUP|Kingston|XPG|Samsung|PNY|Timetec|ADATA|SK Hynix|A-Tech|Micron|Ballistix|HP|Patriot Memory|Patriot|Lenovo|QNAP|Adamanta)\b', title, re.IGNORECASE) #servery: |OWC|Dell|NEMIX   #kazí_model:|Acclamator|PUSKILLNEMIX|GIGASTONE
-
-    """
-    #enterprice
-    enterprise_brands = re.search(r'\b(Samsung|SK Hynix|Micron|NEMIX|Adamanta|OWC|Dell|HP|Lenovo|QNAP|Timetec|A-Tech)\b', title, re.IGNORECASE)
-    #herní
-    gaming_brands = re.search(r'\b(Corsair|G.SKILL|XPG|Patriot|TEAMGROUP|ADATA|Ballistix|GIGASTONE|PUSKILL)\b', title, re.IGNORECASE)
-    """
+    #_enterprice
+    #brand = re.search(r'\b(Samsung|SK Hynix|Micron|NEMIX|Adamanta|OWC|Dell|HP|Lenovo|QNAP|Timetec|A-Tech)\b', title, re.IGNORECASE)
+    #_gaming
+    #brand = re.search(r'\b(Corsair|G.SKILL|XPG|Patriot|TEAMGROUP|ADATA|Ballistix|GIGASTONE|PUSKILL)\b', title, re.IGNORECASE)
 
     is_gaming = re.search(r'\b(Gaming|RGB|LED|ARGB|Heatsink|Heat\s*Spreader|Overclock|OC|Fury|Vengeance|Trident|Ripjaws|Dominator|Beast|Renegade|Viper|Ballistix|T-Force|XPG)\b', title, re.IGNORECASE) #|CL14|CL16
 
@@ -139,7 +139,7 @@ def extract_ram_details(title):
         float(freq) if freq else None,
         float(latency) if latency else None,
         float(voltage) if voltage else None,
-        str(brand.group(1)) if brand else None,
+        str(brand.group(1)).lower() if brand else None,
         int(is_kit),
         1 if is_gaming else 0
     ])
@@ -157,12 +157,14 @@ def clean_data():
 
     raw_df = raw_df.drop_duplicates(subset=['asin'])
     raw_df = raw_df.dropna(subset=['asin'])
-    raw_df['Brand'] = raw_df['Brand'].fillna(None) # "Unknown" / None
+    raw_df['Brand'] = raw_df['Brand'].fillna("unknown") # None / "unknown" (_all specific)
     print(raw_df)
 
     raw_df = raw_df[(raw_df['Speed_MHz'] >= 1000) & (raw_df['Speed_MHz'] < 10000)]
     raw_df = raw_df[(raw_df['Voltage'] < 2) & (raw_df['Voltage'] > 0)]
-    raw_df = raw_df[raw_df['Capacity_GB'] <= 128]
+    #raw_df = raw_df[(raw_df['Capacity_GB'] > 16) & (raw_df['Capacity_GB'] <= 256)]   #(_PC Specific)
+    #raw_df = raw_df[raw_df['Capacity_GB'] <= 32]   #(_PC2 Specific)
+    raw_df = raw_df[(raw_df['Capacity_GB'] >= 32)]   #(_all Specific)
     raw_df = raw_df[['title', 'Capacity_GB', 'Generation', 'Speed_MHz', 'Latency', 'Voltage', 'Brand', 'Is_kit', 'Is_gaming', 'Final_Price']]
     clean_df = raw_df.dropna(subset=['title', 'Capacity_GB', 'Generation', 'Speed_MHz', 'Latency', 'Voltage', 'Brand', 'Is_kit', 'Is_gaming', 'Final_Price'])
     print(clean_df)
@@ -172,7 +174,7 @@ def clean_data():
 dataset = clean_data()
 print(dataset)
 
-with open("../data/ram_data_cleaned_PC.csv", "w", encoding='utf-8', newline='') as file:
+with open("../data/ram_data_cleaned.csv", "w", encoding='utf-8', newline='') as file:
     dataset.to_csv(file, index=False, encoding='utf-8')
 
 
@@ -190,4 +192,4 @@ plt.xlabel('Kapacita (GB)')
 plt.ylabel('Cena ($)')
 plt.title('Vztah kapacity a ceny')
 plt.show()
-    """
+"""

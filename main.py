@@ -10,23 +10,39 @@ model_sets = {
         joblib.load(resource_path('models/classifier_PC.pkl')),
         joblib.load(resource_path('models/regressor_PC.pkl')),
         joblib.load(resource_path('columns/classifier_cols_PC.pkl')),
-        joblib.load(resource_path('columns/regressor_cols_PC.pkl'))
+        joblib.load(resource_path('columns/regressor_cols_PC.pkl')),
     ],
     2: [
         joblib.load(resource_path('models/classifier.pkl')),
         joblib.load(resource_path('models/regressor.pkl')),
         joblib.load(resource_path('columns/classifier_cols.pkl')),
-        joblib.load(resource_path('columns/regressor_cols.pkl'))
+        joblib.load(resource_path('columns/regressor_cols.pkl')),
     ],
     3: [
         joblib.load(resource_path('models/classifier_all.pkl')),
         joblib.load(resource_path('models/regressor_all.pkl')),
         joblib.load(resource_path('columns/classifier_cols_all.pkl')),
-        joblib.load(resource_path('columns/regressor_cols_all.pkl'))
-    ]
+        joblib.load(resource_path('columns/regressor_cols_all.pkl')),
+    ],
+    4: [
+        joblib.load(resource_path('models/classifier_enterprice.pkl')),
+        joblib.load(resource_path('models/regressor_enterprice.pkl')),
+        joblib.load(resource_path('columns/classifier_cols_enterprice.pkl')),
+        joblib.load(resource_path('columns/regressor_cols_enterprice.pkl')),
+    ],
+    5: [
+        joblib.load(resource_path('models/classifier_PC2.pkl')),
+        joblib.load(resource_path('models/regressor_PC2.pkl')),
+        joblib.load(resource_path('columns/classifier_cols_PC2.pkl')),
+        joblib.load(resource_path('columns/regressor_cols_PC2.pkl')),
+    ],
 }
 
 scaler = joblib.load(resource_path('columns/scaler.pkl'))
+
+pc2_limit = 32.0
+pc_limit = 128.0
+enterprice_limit = 896.0
 
 def create_data(capacity_gb, generation, speed, latency: list, voltage: list, is_kit, user_data: list):
 
@@ -45,7 +61,7 @@ def create_data(capacity_gb, generation, speed, latency: list, voltage: list, is
     #print(user_data)
     return user_data
 
-def predict_price(capacity_gb, generation, speed, latency, voltage, brand, is_kit):
+def predict_price(capacity_gb, generation, speed, latency, voltage, brand: str, is_kit, for_servers):
     try:
         if capacity_gb is None or speed is None:
             raise ValueError('RAM capacity and speed are required')
@@ -81,15 +97,26 @@ def predict_price(capacity_gb, generation, speed, latency, voltage, brand, is_ki
 
         classifier_model, regression_model, classifier_columns, regressor_columns, model_number = None, None, None, None, None
 
-        if 0.0 < user_data[0]['Capacity_GB'][0] <= 128.0:
-            ram_class = "!!! PC !!!"
-            model_number = 1
-        elif 128.0 < user_data[0]['Capacity_GB'][0] <= 768.0:
-            ram_class = "!!! ENTERPRICE !!!"
-            model_number = 2
+        if not for_servers:
+            if 0.0 < user_data[0]['Capacity_GB'][0] <= pc2_limit:
+                ram_class = "!!! COMPUTERS !!!"
+                model_number = 5
+            elif pc2_limit < user_data[0]['Capacity_GB'][0] <= pc_limit:
+                ram_class = "!!! COMPUTERS !!!"
+                model_number = 1
+            if user_data[0]['Capacity_GB'][0] > pc_limit:
+                ram_class = f"!!! COMPUTERS !!! \n\n(WARNING: Capacity {user_data[0]['Capacity_GB'][0]} in PC ram region. Is this really PC RAM? The price estimate will be affected)"
+                model_number = 3    #Prakticky nemožný
         else:
-            ram_class = "!!! SERVER MONSTERS !!! \n\n Top price - 27118$ \n (For example 1004+GB capacity gives max price, so predicted price can be much higher depending on what you entered)"
-            model_number = 3
+            if pc_limit < user_data[0]['Capacity_GB'][0] <= enterprice_limit:
+                ram_class = "!!! SERVERS !!!"
+                model_number = 3
+            elif user_data[0]['Capacity_GB'][0] <= pc_limit:
+                ram_class = f"!!! SERVERS !!! \n\n(WARNING: Capacity {user_data[0]['Capacity_GB'][0]} in server ram region. Is this really server RAM? The price estimate will be affected)"
+                model_number = 2
+            elif user_data[0]['Capacity_GB'][0] > enterprice_limit:
+                ram_class = "!!! EXTREME CAPACITIES !!! \n\nPrices depend solely on capacity & the frequency tunes it."
+                model_number = 4    #hodně dobrý
 
         classifier_model = model_sets[model_number][0]
         regressor_model = model_sets[model_number][1]
@@ -106,7 +133,7 @@ def predict_price(capacity_gb, generation, speed, latency, voltage, brand, is_ki
         for data in user_data:
             df = pd.DataFrame(data)
 
-            brand_col = f"Brand_{brand}"
+            brand_col = f"Brand_{brand.lower()}"
             df[brand_col] = 1
 
             df_clf = df.reindex(columns=classifier_columns, fill_value=0)
@@ -129,7 +156,6 @@ def predict_price(capacity_gb, generation, speed, latency, voltage, brand, is_ki
             if values is not None:
                 values.append((data['Latency'], data['Voltage']))
 
-            """
             # graf: co a jak moc ovlivňuje cenu
             importances = regressor_model.feature_importances_  #O kolik sloupec ovlivnil cenu (%)
             features = regressor_columns #Jaký to byl sloupec
@@ -137,7 +163,6 @@ def predict_price(capacity_gb, generation, speed, latency, voltage, brand, is_ki
             data_imp.head(10).plot(kind='barh') #nakreslí graf typu Bar horizontal (barh) s deseti největšími hodnotami
             plt.title("Co nejvíc ovlivňuje cenu?")
             plt.show()
-            """
 
         final_results = print_type_a_price(prices, gaming_probs, values)
 
@@ -176,9 +201,9 @@ def  print_type_a_price(price_estimates, ram_type_probs, values_cl_v):
 
             if values_cl_v is not None:
                 cl, v = values_cl_v[index]
-                results.append(f"\n - S{index+1} (latency: {cl}, voltage: {v}) - \n RAM type: {ram_type}, Odhadovaná cena: {price_estimates[index]:.2f}$")
+                results.append(f"\n - S{index+1} (latency: {cl}, voltage: {v}) - \n RAM type: {ram_type}, Odhadovaná cena: {price_estimates[index]*20.79:.2f}CZK ({price_estimates[index]:.2f}$)")
             else:
-                results.append(f"\n - S{index + 1} - \n RAM type: {ram_type}, Odhadovaná cena: {price_estimates[index]:.2f}$")
+                results.append(f"\n - S{index + 1} - \n RAM type: {ram_type}, Odhadovaná cena: {price_estimates[index]*20.79:.2f}CZK ({price_estimates[index]:.2f}$)")
             index += 1
 
         return results

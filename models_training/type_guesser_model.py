@@ -8,19 +8,28 @@ import joblib
 data_paths = [
     '../data/ram_data_cleaned.csv',
     '../data/ram_data_cleaned_all.csv',
-    '../data/ram_data_cleaned_PC.csv'
+    '../data/ram_data_cleaned_PC.csv',
+    '../data/ram_data_cleaned_enterprice.csv',
+    '../data/ram_data_cleaned_gaming.csv',
+    '../data/ram_data_cleaned_PC2.csv',
 ]
 
 model_names = [
     '../models/classifier.pkl',
     '../models/classifier_all.pkl',
-    '../models/classifier_PC.pkl'
+    '../models/classifier_PC.pkl',
+    '../models/classifier_enterprice.pkl',
+    '../models/classifier_gaming.pkl',
+    '../models/classifier_PC2.pkl',
 ]
 
 column_paths = [
     '../columns/classifier_cols.pkl',
     '../columns/classifier_cols_all.pkl',
-    '../columns/classifier_cols_PC.pkl'
+    '../columns/classifier_cols_PC.pkl',
+    '../columns/classifier_cols_enterprice.pkl',
+    '../columns/classifier_cols_gaming.pkl',
+    '../columns/classifier_cols_PC2.pkl',
 ]
 
 def train_model(path_to_file, path_to_model, path_to_columns):
@@ -60,11 +69,11 @@ def train_model(path_to_file, path_to_model, path_to_columns):
     """
     once = True
     while once:
-        joblib.dump(scaler, '../columns/scaler.pkl')
+        joblib.dump(scaler, '../columns/scaler_server.pkl')
         once = False
     """
 
-train_model(data_paths[2], model_names[2], column_paths[2])
+train_model(data_paths[0], model_names[0], column_paths[0])
 
 """
 index = 0

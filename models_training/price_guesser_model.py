@@ -8,19 +8,25 @@ import joblib
 data_paths = [
     '../data/ram_data_cleaned.csv',
     '../data/ram_data_cleaned_all.csv',
-    '../data/ram_data_cleaned_PC.csv'
+    '../data/ram_data_cleaned_PC.csv',
+    '../data/ram_data_cleaned_gaming.csv',
+    '../data/ram_data_cleaned_PC2.csv',
 ]
 
 model_names = [
     '../models/regressor.pkl',
     '../models/regressor_all.pkl',
-    '../models/regressor_PC.pkl'
+    '../models/regressor_PC.pkl',
+    '../models/regressor_gaming.pkl',
+    '../models/regressor_PC2.pkl',
 ]
 
 column_paths = [
     '../columns/regressor_cols.pkl',
     '../columns/regressor_cols_all.pkl',
-    '../columns/regressor_cols_PC.pkl'
+    '../columns/regressor_cols_PC.pkl',
+    '../columns/regressor_cols_gaming.pkl',
+    '../columns/regressor_cols_PC2.pkl',
 ]
 
 def train_model(path_to_file, path_to_model, path_to_columns):
@@ -38,7 +44,7 @@ def train_model(path_to_file, path_to_model, path_to_columns):
     X_train[to_scale] = scaler.fit_transform(X_train[to_scale])
     X_test[to_scale] = scaler.transform(X_test[to_scale])
 
-    model = RandomForestRegressor(max_depth=100, n_estimators=200, min_samples_split=4, criterion='squared_error', random_state=42)
+    model = RandomForestRegressor(max_depth=100, n_estimators=200, min_samples_split=4, criterion='absolute_error', random_state=42)
     model.fit(X_train, y_train)
 
     y_pred = model.predict(X_test)
@@ -50,7 +56,7 @@ def train_model(path_to_file, path_to_model, path_to_columns):
     joblib.dump(model, path_to_model)
     joblib.dump(X_train.columns.tolist(), path_to_columns)
 
-train_model(data_paths[2], model_names[2], column_paths[2])
+train_model(data_paths[0], model_names[0], column_paths[0])
 
 """
 index = 0

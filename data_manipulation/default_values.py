@@ -6,28 +6,30 @@ def default_cl(gen, freq, is_gaming):
     :param is_gaming: if ram is gaming
     :return: default CL value
     """
-    if (gen == "DDR3" or gen == "DDR3L" or gen == 3) and freq < 1332:
+    if isinstance(gen, str): gen = gen.upper()
+
+    if (gen == "DDR3" or gen == "DDR3L" or gen == 3) and freq < 1333:
         return 7 if is_gaming else 9
     elif (gen == "DDR3" or gen == "DDR3L" or gen == 3) and 1333 <= freq < 1866:
         return 9 if is_gaming else 11
-    elif (gen == "DDR3" or gen == "DDR3L" or gen == 3) and 1867 <= freq:
+    elif (gen == "DDR3" or gen == "DDR3L" or gen == 3) and 1866 <= freq:
         return 10 if is_gaming else 12
-    elif (gen == "DDR4" or gen == 4) and freq < 2399:
+    elif (gen == "DDR4" or gen == 4) and freq < 2400:
         return 11 if is_gaming else 13
-    elif (gen == "DDR4" or gen == 4) and 2400 <= freq < 2933:
+    elif (gen == "DDR4" or gen == 4) and 2400 <= freq < 2934:
         return 15 if is_gaming else 17
     elif (gen == "DDR4" or gen == 4) and 2934 <= freq < 3600:
         return 16 if is_gaming else 22
-    elif (gen == "DDR4" or gen == 4) and 3601 < freq:
+    elif (gen == "DDR4" or gen == 4) and 3600 <= freq:
         return 18 if is_gaming else 26
-    elif (gen == "DDR5" or gen == 5) and freq < 5599:
+    elif (gen == "DDR5" or gen == 5) and freq < 5600:
         return 32 if is_gaming else 40
-    elif (gen == "DDR5" or gen == 5) and 5600 <= freq < 6399:
+    elif (gen == "DDR5" or gen == 5) and 5600 <= freq < 6400:
         return 36 if is_gaming else 42
     elif (gen == "DDR5" or gen == 5) and 6400 <= freq:
         return 38 if is_gaming else 46
     else:
-        raise ValueError(f"Invalid ram generation, '{gen}' is not supported")
+        raise ValueError(f"Invalid ram generation - '{gen}' ({type(gen)}), or frequency - '{freq}' ({type(freq)})")
 
 def default_voltage(gen, is_gaming):
     """
@@ -36,6 +38,8 @@ def default_voltage(gen, is_gaming):
     :param is_gaming: if ram is gaming
     :return: default voltage value
     """
+    if isinstance(gen, str): gen = gen.upper()
+
     if gen == "DDR3" or gen == 3:
         return 1.6 if is_gaming else 1.5
     elif gen == "DDR3L" or gen == 3:
@@ -45,7 +49,7 @@ def default_voltage(gen, is_gaming):
     elif gen == "DDR5" or gen == 5:
         return 1.25 if is_gaming else 1.1
     else:
-        raise ValueError(f"Invalid ram generation, '{gen}' is not supported")
+        raise ValueError(f"Invalid ram generation - '{gen}' ({type(gen)}) is not supported")
 
 def default_gen(freq, capacity):
     """
