@@ -5,7 +5,7 @@ from main import predict_price
 
 def run_ui():
     """
-    Creates and render UI
+    Creates and renders UI
     """
     root = tk.Tk()
     root.title("RAM Price Predictor")
@@ -24,6 +24,10 @@ def run_ui():
     ]
 
     def on_submit():
+        """
+        Submints form filled by user
+        :return:
+        """
         try:
             c = float(entry_cap.get())
             s = float(entry_speed.get())
@@ -87,7 +91,7 @@ def run_ui():
     check_frame.pack(pady=10)
 
     var_kit = tk.BooleanVar(value=True)
-    ttk.Checkbutton(check_frame, text="Jedná se o Kit (sadu)?", variable=var_kit).pack(side=tk.LEFT, padx=10)
+    ttk.Checkbutton(check_frame, text="Is Kit?", variable=var_kit).pack(side=tk.LEFT, padx=10)
 
     var_server = tk.BooleanVar(value=False)
     ttk.Checkbutton(check_frame, text="Server RAM (ECC)?", variable=var_server).pack(side=tk.LEFT, padx=10)

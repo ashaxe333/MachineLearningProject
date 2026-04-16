@@ -45,7 +45,17 @@ pc_limit = 128.0
 enterprice_limit = 896.0
 
 def create_data(capacity_gb, generation, speed, latency: list, voltage: list, is_kit, user_data: list):
-
+    """
+    Creates 2 sets of models inputs
+    :param capacity_gb: ram capacity in GB
+    :param generation: ram generation number
+    :param speed: ram speed in MHz
+    :param latency: ram latency
+    :param voltage: ram voltage
+    :param is_kit: ram is kit or not
+    :param user_data: list for input sets
+    :return: list of 2 input sets
+    """
     for l, v in zip(latency, voltage):
         data = {
             'Capacity_GB': [float(capacity_gb)],
@@ -57,11 +67,21 @@ def create_data(capacity_gb, generation, speed, latency: list, voltage: list, is
         }
         user_data.append(data)
 
-    #print(len(user_data))
-    #print(user_data)
     return user_data
 
 def predict_price(capacity_gb, generation, speed, latency, voltage, brand: str, is_kit, for_servers):
+    """
+    Main function for predicting ram type and price
+    :param capacity_gb: ram capacity in GB
+    :param generation: ram generation number
+    :param speed: ram speed in MHz
+    :param latency: ram latency
+    :param voltage: ram voltage
+    :param brand: brand of the ram
+    :param is_kit: ram is kit or not
+    :param for_servers: ram is for servers or not
+    :return: list of 2 predicted results. If they are same, one is deleted
+    """
     try:
         if capacity_gb is None or speed is None:
             raise ValueError('RAM capacity and speed are required')
@@ -71,13 +91,11 @@ def predict_price(capacity_gb, generation, speed, latency, voltage, brand: str, 
 
         gaming_latency, office_latency = None, None
         if latency is None:
-            #print(f"Latency is None")
             gaming_latency = default_cl(generation, speed, True)
             office_latency = default_cl(generation, speed, False)
 
         gaming_voltage, office_voltage = None, None
         if voltage is None:
-            #print(f"Voltage is None")
             gaming_voltage = default_voltage(f"DDR{generation}", True)
             office_voltage = default_voltage(f"DDR{generation}", False)
 
@@ -156,6 +174,7 @@ def predict_price(capacity_gb, generation, speed, latency, voltage, brand: str, 
             if values is not None:
                 values.append((data['Latency'], data['Voltage']))
 
+            """
             # graf: co a jak moc ovlivňuje cenu
             importances = regressor_model.feature_importances_  #O kolik sloupec ovlivnil cenu (%)
             features = regressor_columns #Jaký to byl sloupec
@@ -163,6 +182,7 @@ def predict_price(capacity_gb, generation, speed, latency, voltage, brand: str, 
             data_imp.head(10).plot(kind='barh') #nakreslí graf typu Bar horizontal (barh) s deseti největšími hodnotami
             plt.title("Co nejvíc ovlivňuje cenu?")
             plt.show()
+            """
 
         final_results = print_type_a_price(prices, gaming_probs, values)
 
@@ -176,13 +196,18 @@ def predict_price(capacity_gb, generation, speed, latency, voltage, brand: str, 
         return unique_results
 
     except ValueError as e:
-        #print(f"err1: {e}")
         return f"err1: {e}"
     except TypeError as e:
-        #print(f"err2: {e}")
         return f"err1: {e}"
 
 def  print_type_a_price(price_estimates, ram_type_probs, values_cl_v):
+    """
+    Function for determining, is ram is gaming or not and setups results, which are printed
+    :param price_estimates: list of price estimates
+    :param ram_type_probs: list of probabilities, if ram is for gaming
+    :param values_cl_v: list of latency and voltage values (or None)
+    :return: list of 2 predicted results
+    """
     results = []
 
     try:
@@ -209,7 +234,6 @@ def  print_type_a_price(price_estimates, ram_type_probs, values_cl_v):
         return results
 
     except ValueError as e:
-        #print(f"err3: {e}")
         return f"err3: {e}"
 
 """

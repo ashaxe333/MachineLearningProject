@@ -6,10 +6,16 @@ from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 import joblib
 
 data_path = '../data/ram_data_cleaned_enterprice.csv'
-model_name = '../models/regressor_enterprice.pkl',
+model_name = '../models/regressor_enterprice.pkl'
 column_path = '../columns/regressor_cols_enterprice.pkl'
 
 def train_model(path_to_file, path_to_model, path_to_columns):
+    """
+    Trains classifier model and saves it in a pickle file.
+    :param path_to_file: path to file to be trained
+    :param path_to_model: path to model to be saved
+    :param path_to_columns: path to column to be saved
+    """
     data = pd.read_csv(path_to_file, sep=",")
 
     data = pd.get_dummies(data, columns=['Brand'], drop_first=True)

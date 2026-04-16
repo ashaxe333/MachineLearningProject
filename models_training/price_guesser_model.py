@@ -9,7 +9,6 @@ data_paths = [
     '../data/ram_data_cleaned.csv',
     '../data/ram_data_cleaned_all.csv',
     '../data/ram_data_cleaned_PC.csv',
-    '../data/ram_data_cleaned_gaming.csv',
     '../data/ram_data_cleaned_PC2.csv',
 ]
 
@@ -17,7 +16,6 @@ model_names = [
     '../models/regressor.pkl',
     '../models/regressor_all.pkl',
     '../models/regressor_PC.pkl',
-    '../models/regressor_gaming.pkl',
     '../models/regressor_PC2.pkl',
 ]
 
@@ -25,11 +23,16 @@ column_paths = [
     '../columns/regressor_cols.pkl',
     '../columns/regressor_cols_all.pkl',
     '../columns/regressor_cols_PC.pkl',
-    '../columns/regressor_cols_gaming.pkl',
     '../columns/regressor_cols_PC2.pkl',
 ]
 
 def train_model(path_to_file, path_to_model, path_to_columns):
+    """
+    Trains classifier model and saves it in a pickle file.
+    :param path_to_file: path to file to be trained
+    :param path_to_model: path to model to be saved
+    :param path_to_columns: path to column to be saved
+    """
     data = pd.read_csv(path_to_file, sep=",")
 
     data = pd.get_dummies(data, columns=['Brand'], drop_first=True)
